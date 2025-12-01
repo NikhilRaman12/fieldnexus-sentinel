@@ -1,0 +1,48 @@
+[
+    {
+        "rows": 6727,
+        "columns": 3,
+        "dtypes": {
+            " Area": "float64",
+            "Year": "int64",
+            "average_rain_fall_mm_per_year": "float64"
+        },
+        "missing_values": {
+            " Area": 6727,
+            "Year": 0,
+            "average_rain_fall_mm_per_year": 780
+        },
+        "numerical_summary": {
+            " Area": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Year": {
+                "count": 6727.0,
+                "mean": 2001.3548387096773,
+                "std": 9.530114093532244,
+                "min": 1985.0,
+                "25%": 1993.0,
+                "50%": 2001.0,
+                "75%": 2010.0,
+                "max": 2017.0
+            },
+            "average_rain_fall_mm_per_year": {
+                "count": 5947.0,
+                "mean": 1124.7432318816209,
+                "std": 786.2573647424141,
+                "min": 51.0,
+                "25%": 534.0,
+                "50%": 1010.0,
+                "75%": 1651.0,
+                "max": 3240.0
+            }
+        }
+    }
+]

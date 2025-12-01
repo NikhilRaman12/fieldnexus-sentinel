@@ -1,0 +1,48 @@
+[
+    {
+        "rows": 64353,
+        "columns": 3,
+        "dtypes": {
+            "year": "int64",
+            "country": "float64",
+            "avg_temp": "float64"
+        },
+        "missing_values": {
+            "year": 0,
+            "country": 64353,
+            "avg_temp": 0
+        },
+        "numerical_summary": {
+            "year": {
+                "count": 64353.0,
+                "mean": 1906.7434463039797,
+                "std": 66.80413783284673,
+                "min": 1743.0,
+                "25%": 1859.0,
+                "50%": 1911.0,
+                "75%": 1962.0,
+                "max": 2013.0
+            },
+            "country": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "avg_temp": {
+                "count": 64353.0,
+                "mean": 16.1065807343869,
+                "std": 7.651984804889772,
+                "min": -14.35,
+                "25%": 9.64,
+                "50%": 16.12,
+                "75%": 23.85,
+                "max": 30.73
+            }
+        }
+    }
+]

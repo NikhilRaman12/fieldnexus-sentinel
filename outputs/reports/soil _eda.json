@@ -1,0 +1,72 @@
+[
+    {
+        "rows": 875,
+        "columns": 5,
+        "dtypes": {
+            "District": "float64",
+            "Nitrogen Value": "float64",
+            "Phosphorous value": "float64",
+            "Potassium value": "float64",
+            "pH": "float64"
+        },
+        "missing_values": {
+            "District": 875,
+            "Nitrogen Value": 0,
+            "Phosphorous value": 0,
+            "Potassium value": 0,
+            "pH": 0
+        },
+        "numerical_summary": {
+            "District": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Nitrogen Value": {
+                "count": 875.0,
+                "mean": 24.769715428571423,
+                "std": 8.703916982730671,
+                "min": 20.0,
+                "25%": 20.0315,
+                "50%": 20.267,
+                "75%": 25.055,
+                "max": 66.959
+            },
+            "Phosphorous value": {
+                "count": 875.0,
+                "mean": 61.156523428571425,
+                "std": 13.504639093429592,
+                "min": 20.045,
+                "25%": 50.1395,
+                "50%": 61.89,
+                "75%": 73.955,
+                "max": 80.0
+            },
+            "Potassium value": {
+                "count": 875.0,
+                "mean": 61.739980571428575,
+                "std": 12.960962412472185,
+                "min": 22.91,
+                "25%": 52.713,
+                "50%": 63.26,
+                "75%": 72.28999999999999,
+                "max": 80.0
+            },
+            "pH": {
+                "count": 875.0,
+                "mean": 7.074508,
+                "std": 0.28295988776217007,
+                "min": 6.0503,
+                "25%": 6.9991,
+                "50%": 7.006,
+                "75%": 7.0922,
+                "max": 9.031
+            }
+        }
+    }
+]

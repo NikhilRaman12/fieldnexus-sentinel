@@ -1,0 +1,72 @@
+{
+    "agriculture_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:Farm_ID",
+        "status": "evaluated"
+    },
+    "climate_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:Year",
+        "status": "evaluated"
+    },
+    "pesticides_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:Domain",
+        "status": "evaluated"
+    },
+    "rainfall_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from: Area",
+        "status": "evaluated"
+    },
+    "soil _clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:District",
+        "status": "evaluated"
+    },
+    "supply_chain_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:Market_ID",
+        "status": "evaluated"
+    },
+    "sustainability_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:Farm_ID",
+        "status": "evaluated"
+    },
+    "temp_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:year",
+        "status": "evaluated"
+    },
+    "yield-A_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 1.0,
+        "target_note": "synthetic_target_from:Domain Code",
+        "status": "evaluated"
+    },
+    "yield-B_clean.csv": {
+        "task_type": "classification",
+        "metric": "accuracy",
+        "value": 0.9998229775181448,
+        "target_note": "synthetic_target_from:Unnamed: 0",
+        "status": "evaluated"
+    }
+}

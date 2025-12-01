@@ -1,0 +1,132 @@
+[
+    {
+        "rows": 50,
+        "columns": 10,
+        "dtypes": {
+            "Farm_ID": "float64",
+            "Crop_Type": "float64",
+            "Farm_Area(acres)": "float64",
+            "Irrigation_Type": "float64",
+            "Fertilizer_Used(tons)": "float64",
+            "Pesticide_Used(kg)": "float64",
+            "Yield(tons)": "float64",
+            "Soil_Type": "float64",
+            "Season": "float64",
+            "Water_Usage(cubic meters)": "float64"
+        },
+        "missing_values": {
+            "Farm_ID": 50,
+            "Crop_Type": 50,
+            "Farm_Area(acres)": 0,
+            "Irrigation_Type": 50,
+            "Fertilizer_Used(tons)": 0,
+            "Pesticide_Used(kg)": 0,
+            "Yield(tons)": 0,
+            "Soil_Type": 50,
+            "Season": 50,
+            "Water_Usage(cubic meters)": 0
+        },
+        "numerical_summary": {
+            "Farm_ID": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Crop_Type": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Farm_Area(acres)": {
+                "count": 50.0,
+                "mean": 254.96380000000002,
+                "std": 139.41778157738412,
+                "min": 12.5,
+                "25%": 135.71,
+                "50%": 281.98,
+                "75%": 368.1075,
+                "max": 483.88
+            },
+            "Irrigation_Type": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Fertilizer_Used(tons)": {
+                "count": 50.0,
+                "mean": 4.9054,
+                "std": 2.732688897815647,
+                "min": 0.5,
+                "25%": 2.4375,
+                "50%": 5.045,
+                "75%": 6.885,
+                "max": 9.96
+            },
+            "Pesticide_Used(kg)": {
+                "count": 50.0,
+                "mean": 2.398,
+                "std": 1.4386132778705005,
+                "min": 0.14,
+                "25%": 0.9724999999999999,
+                "50%": 2.33,
+                "75%": 3.4175,
+                "max": 4.99
+            },
+            "Yield(tons)": {
+                "count": 50.0,
+                "mean": 27.0592,
+                "std": 13.345789497295483,
+                "min": 3.86,
+                "25%": 16.19,
+                "50%": 28.97,
+                "75%": 37.86,
+                "max": 48.02
+            },
+            "Soil_Type": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Season": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Water_Usage(cubic meters)": {
+                "count": 50.0,
+                "mean": 56724.2956,
+                "std": 27264.99205298171,
+                "min": 5869.75,
+                "25%": 37818.1525,
+                "50%": 54097.075,
+                "75%": 82240.0325,
+                "max": 94754.73
+            }
+        }
+    }
+]

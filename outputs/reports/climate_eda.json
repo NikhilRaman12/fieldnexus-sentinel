@@ -1,0 +1,192 @@
+[
+    {
+        "rows": 10000,
+        "columns": 15,
+        "dtypes": {
+            "Year": "int64",
+            "Country": "float64",
+            "Region": "float64",
+            "Crop_Type": "float64",
+            "Average_Temperature_C": "float64",
+            "Total_Precipitation_mm": "float64",
+            "CO2_Emissions_MT": "float64",
+            "Crop_Yield_MT_per_HA": "float64",
+            "Extreme_Weather_Events": "int64",
+            "Irrigation_Access_%": "float64",
+            "Pesticide_Use_KG_per_HA": "float64",
+            "Fertilizer_Use_KG_per_HA": "float64",
+            "Soil_Health_Index": "float64",
+            "Adaptation_Strategies": "float64",
+            "Economic_Impact_Million_USD": "float64"
+        },
+        "missing_values": {
+            "Year": 0,
+            "Country": 10000,
+            "Region": 10000,
+            "Crop_Type": 10000,
+            "Average_Temperature_C": 0,
+            "Total_Precipitation_mm": 0,
+            "CO2_Emissions_MT": 0,
+            "Crop_Yield_MT_per_HA": 0,
+            "Extreme_Weather_Events": 0,
+            "Irrigation_Access_%": 0,
+            "Pesticide_Use_KG_per_HA": 0,
+            "Fertilizer_Use_KG_per_HA": 0,
+            "Soil_Health_Index": 0,
+            "Adaptation_Strategies": 10000,
+            "Economic_Impact_Million_USD": 0
+        },
+        "numerical_summary": {
+            "Year": {
+                "count": 10000.0,
+                "mean": 2007.0887,
+                "std": 10.084245212714288,
+                "min": 1990.0,
+                "25%": 1999.0,
+                "50%": 2007.0,
+                "75%": 2016.0,
+                "max": 2024.0
+            },
+            "Country": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Region": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Crop_Type": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Average_Temperature_C": {
+                "count": 10000.0,
+                "mean": 15.241299,
+                "std": 11.466954595155931,
+                "min": -4.99,
+                "25%": 5.43,
+                "50%": 15.175,
+                "75%": 25.34,
+                "max": 35.0
+            },
+            "Total_Precipitation_mm": {
+                "count": 10000.0,
+                "mean": 1611.663834,
+                "std": 805.0168148137861,
+                "min": 200.15,
+                "25%": 925.6975,
+                "50%": 1611.1599999999999,
+                "75%": 2306.9975,
+                "max": 2999.67
+            },
+            "CO2_Emissions_MT": {
+                "count": 10000.0,
+                "mean": 15.246608000000002,
+                "std": 8.589422921998269,
+                "min": 0.5,
+                "25%": 7.76,
+                "50%": 15.2,
+                "75%": 22.82,
+                "max": 30.0
+            },
+            "Crop_Yield_MT_per_HA": {
+                "count": 10000.0,
+                "mean": 2.2400169,
+                "std": 0.9983415170135165,
+                "min": 0.45,
+                "25%": 1.449,
+                "50%": 2.17,
+                "75%": 2.93,
+                "max": 5.0
+            },
+            "Extreme_Weather_Events": {
+                "count": 10000.0,
+                "mean": 4.9809,
+                "std": 3.1658075468578906,
+                "min": 0.0,
+                "25%": 2.0,
+                "50%": 5.0,
+                "75%": 8.0,
+                "max": 10.0
+            },
+            "Irrigation_Access_%": {
+                "count": 10000.0,
+                "mean": 55.248332,
+                "std": 25.98830472608842,
+                "min": 10.01,
+                "25%": 32.6775,
+                "50%": 55.175,
+                "75%": 77.5825,
+                "max": 99.99
+            },
+            "Pesticide_Use_KG_per_HA": {
+                "count": 10000.0,
+                "mean": 24.955735,
+                "std": 14.490962263373225,
+                "min": 0.0,
+                "25%": 12.5275,
+                "50%": 24.93,
+                "75%": 37.47,
+                "max": 49.99
+            },
+            "Fertilizer_Use_KG_per_HA": {
+                "count": 10000.0,
+                "mean": 49.973707999999995,
+                "std": 28.711026934916518,
+                "min": 0.01,
+                "25%": 25.39,
+                "50%": 49.635000000000005,
+                "75%": 74.82499999999999,
+                "max": 99.99
+            },
+            "Soil_Health_Index": {
+                "count": 10000.0,
+                "mean": 64.901278,
+                "std": 20.195882333610466,
+                "min": 30.0,
+                "25%": 47.235,
+                "50%": 64.65,
+                "75%": 82.4725,
+                "max": 100.0
+            },
+            "Adaptation_Strategies": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Economic_Impact_Million_USD": {
+                "count": 10000.0,
+                "mean": 674.269658,
+                "std": 414.5914313919927,
+                "min": 47.84,
+                "25%": 350.545,
+                "50%": 583.9200000000001,
+                "75%": 917.505,
+                "max": 2346.47
+            }
+        }
+    }
+]

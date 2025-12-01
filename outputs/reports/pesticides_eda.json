@@ -1,0 +1,96 @@
+[
+    {
+        "rows": 4349,
+        "columns": 7,
+        "dtypes": {
+            "Domain": "float64",
+            "Area": "float64",
+            "Element": "float64",
+            "Item": "float64",
+            "Year": "int64",
+            "Unit": "float64",
+            "Value": "float64"
+        },
+        "missing_values": {
+            "Domain": 4349,
+            "Area": 4349,
+            "Element": 4349,
+            "Item": 4349,
+            "Year": 0,
+            "Unit": 4349,
+            "Value": 0
+        },
+        "numerical_summary": {
+            "Domain": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Area": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Element": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Item": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Year": {
+                "count": 4349.0,
+                "mean": 2003.1388825017245,
+                "std": 7.728043577553051,
+                "min": 1990.0,
+                "25%": 1996.0,
+                "50%": 2003.0,
+                "75%": 2010.0,
+                "max": 2016.0
+            },
+            "Unit": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Value": {
+                "count": 4349.0,
+                "mean": 20303.34146470453,
+                "std": 117736.19044755587,
+                "min": 0.0,
+                "25%": 93.0,
+                "50%": 1137.56,
+                "75%": 7869.0,
+                "max": 1807000.0
+            }
+        }
+    }
+]

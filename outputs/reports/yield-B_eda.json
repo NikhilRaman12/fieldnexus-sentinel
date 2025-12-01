@@ -1,0 +1,108 @@
+[
+    {
+        "rows": 28242,
+        "columns": 8,
+        "dtypes": {
+            "Unnamed: 0": "int64",
+            "Area": "float64",
+            "Item": "float64",
+            "Year": "int64",
+            "hg/ha_yield": "int64",
+            "average_rain_fall_mm_per_year": "float64",
+            "pesticides_tonnes": "float64",
+            "avg_temp": "float64"
+        },
+        "missing_values": {
+            "Unnamed: 0": 0,
+            "Area": 28242,
+            "Item": 28242,
+            "Year": 0,
+            "hg/ha_yield": 0,
+            "average_rain_fall_mm_per_year": 0,
+            "pesticides_tonnes": 0,
+            "avg_temp": 0
+        },
+        "numerical_summary": {
+            "Unnamed: 0": {
+                "count": 28242.0,
+                "mean": 14120.5,
+                "std": 8152.90748751634,
+                "min": 0.0,
+                "25%": 7060.25,
+                "50%": 14120.5,
+                "75%": 21180.75,
+                "max": 28241.0
+            },
+            "Area": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Item": {
+                "count": 0.0,
+                "mean": NaN,
+                "std": NaN,
+                "min": NaN,
+                "25%": NaN,
+                "50%": NaN,
+                "75%": NaN,
+                "max": NaN
+            },
+            "Year": {
+                "count": 28242.0,
+                "mean": 2001.5442957297641,
+                "std": 7.05190528539453,
+                "min": 1990.0,
+                "25%": 1995.0,
+                "50%": 2001.0,
+                "75%": 2008.0,
+                "max": 2013.0
+            },
+            "hg/ha_yield": {
+                "count": 28242.0,
+                "mean": 77053.33209404434,
+                "std": 84956.61289666744,
+                "min": 50.0,
+                "25%": 19919.25,
+                "50%": 38295.0,
+                "75%": 104676.75,
+                "max": 501412.0
+            },
+            "average_rain_fall_mm_per_year": {
+                "count": 28242.0,
+                "mean": 1149.055980454642,
+                "std": 709.8121499492202,
+                "min": 51.0,
+                "25%": 593.0,
+                "50%": 1083.0,
+                "75%": 1668.0,
+                "max": 3240.0
+            },
+            "pesticides_tonnes": {
+                "count": 28242.0,
+                "mean": 37076.90934353091,
+                "std": 59958.784665058076,
+                "min": 0.04,
+                "25%": 1702.0,
+                "50%": 17529.44,
+                "75%": 48687.88,
+                "max": 367778.0
+            },
+            "avg_temp": {
+                "count": 28242.0,
+                "mean": 20.542626584519514,
+                "std": 6.312050836049793,
+                "min": 1.3,
+                "25%": 16.7025,
+                "50%": 21.51,
+                "75%": 26.0,
+                "max": 30.65
+            }
+        }
+    }
+]

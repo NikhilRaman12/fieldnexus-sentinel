@@ -1,0 +1,5 @@
+data/processed/
+eda/reports/
+logs/
+__pycache__/
+*.log
