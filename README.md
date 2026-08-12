@@ -43,9 +43,17 @@ FieldNexus Sentinel closes that gap with a **multi‑agent pipeline**:
 
 ## QuickStart
 
-Clone the repo and run the pipeline:
-
+1. Install dependencies:
 ```bash
-git clone https://github.com/NikhilRaman12/fieldnexus-sentinel.git
-cd fieldnexus-sentinel
+pip install -r requirements.txt
+```
+
+2. Run the full agentic pipeline via CLI:
+```bash
 python src/app.py
+```
+
+3. Launch the interactive Web UI Dashboard:
+```bash
+streamlit run src/ui.py
+```

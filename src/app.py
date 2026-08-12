@@ -1,10 +1,24 @@
 import os
-import pandas as pd
+import sys
 
+# Ensure Python can find root directory and src directory
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
+import pandas as pd
 from agents.data_cleaning_agent import DataCleaningAgent
-from agents.pipeline_agent import PipelineAgent
 from agents.eda_agent import EDAAgent
+from agents.model_agent import ModelAgent
+from agents.evaluation_agent import EvaluationAgent
+from agents.insight_agent import InsightAgent
+from agents.inference_agent import InferenceAgent
+from agents.pipeline_agent import PipelineAgent
 from utilis import get_logger
+
 
 
 def main():
@@ -14,50 +28,47 @@ def main():
     raw_dir = os.path.join("data", "raw")
     proc_dir = os.path.join("data", "processed")
     eda_dir = os.path.join("eda", "reports")
+    report_dir = os.path.join("outputs", "reports")
+
     os.makedirs(raw_dir, exist_ok=True)
     os.makedirs(proc_dir, exist_ok=True)
     os.makedirs(eda_dir, exist_ok=True)
+    os.makedirs(report_dir, exist_ok=True)
 
-    logger.info("=== Running Data Cleaning Agent ===")
+    logger.info("==================================================")
+    logger.info("   FIELDNEXUS-SENTINEL: MULTI-AGENT PIPELINE    ")
+    logger.info("==================================================")
 
-    # Initialize agents
+    # Initialize all specialized agents
     cleaning_agent = DataCleaningAgent()
-    pipeline_agent = PipelineAgent(cleaning_agent=cleaning_agent)
-
-    # Run cleaning on all CSV files in raw_dir
-    pipeline_agent.run_cleaning(raw_dir=raw_dir, proc_dir=proc_dir)
-
-    logger.info("=== Running EDA Agent ===")
-
     eda_agent = EDAAgent()
+    model_agent = ModelAgent(model_type="rf")
+    evaluation_agent = EvaluationAgent()
+    insight_agent = InsightAgent()
+    inference_agent = InferenceAgent()
 
-    # Run EDA on all cleaned CSV files in proc_dir
-    # Skip duplicates like "*_clean.csv" to avoid multiple summaries per dataset
-    for fname in os.listdir(proc_dir):
-        if not fname.lower().endswith(".csv"):
-            continue
-        if "_clean" in fname:
-            logger.info(f"Skipping EDA for duplicate/derived file: {fname}")
-            continue
+    # Instantiate Orchestrator Pipeline Agent
+    pipeline = PipelineAgent(
+        cleaning_agent=cleaning_agent,
+        eda_agent=eda_agent,
+        model_agent=model_agent,
+        evaluation_agent=evaluation_agent,
+        insight_agent=insight_agent,
+        inference_agent=inference_agent,
+    )
 
-        proc_path = os.path.join(proc_dir, fname)
+    # Run full end-to-end pipeline execution
+    results = pipeline.run_full_pipeline(
+        raw_dir=raw_dir,
+        proc_dir=proc_dir,
+        eda_dir=eda_dir,
+        report_dir=report_dir,
+    )
 
-        try:
-            df = pd.read_csv(proc_path)
-        except Exception as e:
-            logger.error(f"Failed to read processed file {proc_path}: {e}")
-            continue
-
-        try:
-            eda_summary = eda_agent.execute(df)
-            out_path = os.path.join(eda_dir, f"{os.path.splitext(fname)[0]}_eda.csv")
-            eda_summary.to_csv(out_path, index=False)
-            logger.info(f"EDA summary saved: {out_path}")
-        except Exception as e:
-            logger.error(f"EDA failed for {proc_path}: {e}")
-
-    logger.info("=== Pipeline + EDA completed successfully ===")
+    logger.info("=== FIELDNEXUS-SENTINEL PIPELINE EXECUTED SUCCESSFULLY ===")
+    logger.info(f"Models Trained: {results['trained_models_count']}")
+    logger.info(f"Report Summary: {report_dir}/insights.json")
 
 
 if __name__ == "__main__":
-    main()
+    main()

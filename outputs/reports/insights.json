@@ -1,72 +1,140 @@
 {
-    "agriculture_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:Farm_ID",
-        "status": "evaluated"
-    },
-    "climate_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:Year",
-        "status": "evaluated"
-    },
-    "pesticides_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:Domain",
-        "status": "evaluated"
-    },
-    "rainfall_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from: Area",
-        "status": "evaluated"
-    },
-    "soil _clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:District",
-        "status": "evaluated"
-    },
-    "supply_chain_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:Market_ID",
-        "status": "evaluated"
-    },
-    "sustainability_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:Farm_ID",
-        "status": "evaluated"
-    },
-    "temp_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:year",
-        "status": "evaluated"
-    },
-    "yield-A_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 1.0,
-        "target_note": "synthetic_target_from:Domain Code",
-        "status": "evaluated"
-    },
-    "yield-B_clean.csv": {
-        "task_type": "classification",
-        "metric": "accuracy",
-        "value": 0.9998229775181448,
-        "target_note": "synthetic_target_from:Unnamed: 0",
-        "status": "evaluated"
+    "pipeline_status": "completed",
+    "total_datasets_evaluated": 12,
+    "evaluations": {
+        "agriculture.csv": {
+            "task_type": "regression",
+            "target_name": "Yield(tons)",
+            "target_note": "legitimate_target:Yield(tons)",
+            "metrics": {
+                "rmse": 11.6392,
+                "mae": 9.1984,
+                "r2_score": 0.1516
+            },
+            "status": "evaluated"
+        },
+        "climate.csv": {
+            "task_type": "regression",
+            "target_name": "Crop_Yield_MT_per_HA",
+            "target_note": "legitimate_target:Crop_Yield_MT_per_HA",
+            "metrics": {
+                "rmse": 0.6357,
+                "mae": 0.5061,
+                "r2_score": 0.5833
+            },
+            "status": "evaluated"
+        },
+        "kaggle_crop_recommendation.csv": {
+            "task_type": "classification",
+            "target_name": "label",
+            "target_note": "legitimate_target:label",
+            "metrics": {
+                "accuracy": 0.9909,
+                "precision": 0.992,
+                "recall": 0.9909,
+                "f1_score": 0.991
+            },
+            "status": "evaluated"
+        },
+        "kaggle_crop_yield.csv": {
+            "task_type": "regression",
+            "target_name": "Yield",
+            "target_note": "detected_target:Yield",
+            "metrics": {
+                "rmse": 5.0559,
+                "mae": 4.5228,
+                "r2_score": -2.6054
+            },
+            "status": "evaluated"
+        },
+        "pesticides.csv": {
+            "task_type": "regression",
+            "target_name": "Value",
+            "target_note": "legitimate_target:Value",
+            "metrics": {
+                "rmse": 8662.528,
+                "mae": 1636.2353,
+                "r2_score": 0.9964
+            },
+            "status": "evaluated"
+        },
+        "rainfall.csv": {
+            "task_type": "classification",
+            "target_name": "average_rain_fall_mm_per_year",
+            "target_note": "legitimate_target:average_rain_fall_mm_per_year",
+            "metrics": {
+                "accuracy": 0.9983,
+                "precision": 0.9987,
+                "recall": 0.9983,
+                "f1_score": 0.9983
+            },
+            "status": "evaluated"
+        },
+        "soil.csv": {
+            "task_type": "regression",
+            "target_name": "pH",
+            "target_note": "legitimate_target:pH",
+            "metrics": {
+                "rmse": 0.2063,
+                "mae": 0.1214,
+                "r2_score": 0.4624
+            },
+            "status": "evaluated"
+        },
+        "supply_chain.csv": {
+            "task_type": "regression",
+            "target_name": "Market_Price_per_ton",
+            "target_note": "legitimate_target:Market_Price_per_ton",
+            "metrics": {
+                "rmse": 122.0725,
+                "mae": 103.8954,
+                "r2_score": -0.0993
+            },
+            "status": "evaluated"
+        },
+        "sustainability.csv": {
+            "task_type": "regression",
+            "target_name": "Sustainability_Score",
+            "target_note": "legitimate_target:Sustainability_Score",
+            "metrics": {
+                "rmse": 29.0079,
+                "mae": 24.6041,
+                "r2_score": -0.0699
+            },
+            "status": "evaluated"
+        },
+        "temp.csv": {
+            "task_type": "regression",
+            "target_name": "avg_temp",
+            "target_note": "legitimate_target:avg_temp",
+            "metrics": {
+                "rmse": 3.6512,
+                "mae": 2.4249,
+                "r2_score": 0.7538
+            },
+            "status": "evaluated"
+        },
+        "yield-A.csv": {
+            "task_type": "regression",
+            "target_name": "Value",
+            "target_note": "legitimate_target:Value",
+            "metrics": {
+                "rmse": 35591.4541,
+                "mae": 20225.4614,
+                "r2_score": 0.6972
+            },
+            "status": "evaluated"
+        },
+        "yield-B.csv": {
+            "task_type": "regression",
+            "target_name": "hg/ha_yield",
+            "target_note": "legitimate_target:hg/ha_yield",
+            "metrics": {
+                "rmse": 24209.9661,
+                "mae": 11557.8971,
+                "r2_score": 0.926
+            },
+            "status": "evaluated"
+        }
     }
 }
