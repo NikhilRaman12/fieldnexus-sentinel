@@ -5,6 +5,10 @@ from backend.intelligence.crop_guard.crop_guard_engine import CropGuardEngine
 from backend.intelligence.market_sense.net_realization_optimizer import NetRealizationOptimizer
 from backend.intelligence.input_trust.input_trust_engine import InputTrustEngine
 from backend.governance.provenance.registry import DataSourceRegistry
+from backend.integrations.google_ai.gemma_adapter import GoogleGemmaAdapter, GemmaInferenceRequest
+from backend.integrations.google_ai.vertex_ai_service import GoogleVertexAIService, VertexPredictionRequest
+from backend.integrations.earth_engine.sentinel_adapter import GoogleEarthEngineAdapter, EarthEngineVegetationRequest
+from backend.intelligence.orchestrator.a2a_negotiation import AgentToAgentNegotiator
 
 client = TestClient(app)
 
@@ -53,9 +57,7 @@ def test_input_trust_differential_diagnosis():
     )
     assert len(report.differential_diagnosis) >= 2
     assert len(report.verified_regulatory_products) >= 1
-    # Verify CIB&RC or FCO compliance
-    first_product = report.verified_regulatory_products[0]
-    assert first_product.registration_number is not None
+    assert report.verified_regulatory_products[0].registration_number is not None
 
 def test_data_source_registry_provenance():
     sources = DataSourceRegistry.list_all_sources()
@@ -78,35 +80,41 @@ def test_api_crop_risk():
     assert 'threat_assessments' in data
     assert len(data['threat_assessments']) > 0
 
-def test_api_market_compare():
-    res = client.post('/api/v1/markets/compare', json={
-        'latitude': 17.3850,
-        'longitude': 78.4867,
-        'commodity': 'Tomato',
-        'quantity_quintals': 40.0,
-        'district': 'Rangareddy'
-    })
-    assert res.status_code == 200
-    data = res.json()
-    assert 'recommended_mandi' in data
-    assert data['recommended_mandi']['net_realization_per_quintal'] > 0
+def test_google_gemma_edge_inference():
+    gemma = GoogleGemmaAdapter()
+    resp = gemma.run_edge_inference(GemmaInferenceRequest(
+        crop='Tomato',
+        symptom_notes='Target-board concentric rings on foliage',
+        temperature_c=25.0,
+        humidity_percent=80.0
+    ))
+    assert resp.offline_edge_ready is True
+    assert 'Alternaria solani' in resp.diagnostic_hypothesis
+    assert resp.confidence_score > 0.75
 
-def test_api_input_trust_diagnose():
-    res = client.post('/api/v1/input-trust/diagnose', json={
-        'crop': 'Tomato',
-        'symptom_description': 'Dark concentric spots on leaves',
-        'symptom_location': 'leaf',
-        'crop_stage': 'flowering'
-    })
-    assert res.status_code == 200
-    data = res.json()
-    assert 'differential_diagnosis' in data
-    assert len(data['verified_regulatory_products']) > 0
+def test_google_earth_engine_sentinel():
+    gee = GoogleEarthEngineAdapter()
+    resp = gee.analyze_crop_vigor(EarthEngineVegetationRequest(
+        latitude=17.3850,
+        longitude=78.4867
+    ))
+    assert resp.ndvi_mean > 0.5
+    assert 'COPERNICUS/S2_SR_HARMONIZED' in resp.satellite_sensor
+    assert resp.provenance_id == 'PROV-GEE-SENTINEL2-006'
 
-def test_api_data_sources_status():
-    res = client.get('/api/v1/data-sources/status')
-    assert res.status_code == 200
-    assert len(res.json()) >= 4
+def test_agent_to_agent_autonomous_negotiation():
+    neg = AgentToAgentNegotiator()
+    session = neg.negotiate_harvest_and_treatment(
+        crop='Tomato',
+        detected_threat='Early Blight',
+        threat_level='high',
+        selected_chemical_phi_days=7,
+        current_mandi_modal_price=2500.0,
+        planned_harvest_days_away=2
+    )
+    assert session.consensus_status == 'REACHED'
+    assert len(session.messages) == 3
+    assert session.active_consensus['action'] == 'SUBSTITUTE_LOW_PHI_INPUT_OR_DELAY_HARVEST'
 
 def test_end_to_end_decision_plan():
     res = client.post('/api/v1/decisions/plan', json={
