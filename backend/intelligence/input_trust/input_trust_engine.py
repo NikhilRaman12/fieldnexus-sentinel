@@ -1,18 +1,17 @@
 """
-KRISHIVA AI — Input Trust Safety and Diagnostic Engine
-Executes evidence-led differential diagnosis and regulatory compliance checks.
-Enforces:
-1. Differential Diagnosis First (never diagnose on leaf color alone).
-2. Regulatory CIB&RC label claims check before recommending any pesticide.
-3. FCO standards check for fertilizer formulations.
-4. Mandatory Pre-Harvest Interval (PHI) verification.
+KRISHIVA AI — Input Trust Safety and Diagnostic Engine (Hardened for Buildathon)
+
+CRITICAL SAFETY DIRECTIVES:
+- Disabled all unverified chemical pesticide and dosage outputs.
+- Never invent CIB&RC registration identifiers, approved uses, formulations, waiting periods, or FCO compliance claims.
+- Never recommend a product unless crop, target pest/disease, formulation, registration, and approved label use are verified.
+- Returns differential diagnosis, missing evidence, non-chemical controls, and mandatory agronomist escalation.
+- Diagnosis is crop-aware (handles Tomato specifically, with appropriate agronomic boundaries).
+- Removed unsafe hard-coded fertilizer prescriptions.
 """
 
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
-from backend.knowledge.input_catalogue.regulatory_registry import (
-    CIBRC_TOMATO_REGISTRY, FCO_FERTILIZER_REGISTRY, CIBRCRegistration, FCOFertilizerGrade
-)
 from backend.core.logging import get_logger
 
 logger = get_logger("input_trust_engine")
@@ -31,12 +30,13 @@ class ProductRecommendationDetail(BaseModel):
     active_ingredient: str
     formulation: str
     category: str
-    approved_dosage_per_acre: str
-    pre_harvest_interval_days: int
+    approved_dosage_per_acre: Optional[str] = None  # None unless verified against label
+    pre_harvest_interval_days: Optional[int] = None
     registration_authority: str
-    registration_number: str
+    registration_number: Optional[str] = None
     source_citation: str
     safety_cautions: str
+    verification_status: str  # 'VERIFIED_OFFICIAL' or 'UNVERIFIED_RESTRICTED'
 
 
 class DiagnosticInterventionReport(BaseModel):
@@ -48,13 +48,13 @@ class DiagnosticInterventionReport(BaseModel):
     verified_regulatory_products: List[ProductRecommendationDetail]
     non_chemical_cultural_controls: List[str]
     missing_critical_data: List[str]
-    confidence_level: str  # High, Moderate, Requires Field Soil/Pathology Test
+    confidence_level: str
     requires_expert_escalation: bool
     regulatory_disclaimer: str
 
 
 class InputTrustEngine:
-    """Delivers verified, safety-compliant agricultural input advisory."""
+    """Delivers verified, safety-compliant agricultural diagnostic advisory."""
 
     def diagnose_and_recommend(
         self,
@@ -67,138 +67,137 @@ class InputTrustEngine:
     ) -> DiagnosticInterventionReport:
         """
         Executes strict differential diagnosis.
-        Prevents premature chemical prescription; matches CIB&RC/FCO verified inputs only.
+        CRITICAL SAFETY RULE: Never prescribe chemical dosages unless verified against official statutory gazette.
+        When unverified, returns non-chemical cultural controls and mandatory expert escalation.
         """
+        crop_norm = crop.strip().capitalize()
         symptom_lower = symptom_description.lower()
+
         differentials: List[DifferentialPossibility] = []
         verified_products: List[ProductRecommendationDetail] = []
         cultural_practices: List[str] = []
         missing_data: List[str] = []
-        requires_escalation = False
+        requires_escalation = True  # Default to safety-critical agronomist escalation
 
-        # Example Case 1: Yellowing Leaves / Chlorosis Differential
-        if "yellow" in symptom_lower or "chlorosis" in symptom_lower or "pale" in symptom_lower:
-            differentials = [
-                DifferentialPossibility(
-                    condition_name="Nitrogen Deficiency",
-                    category="nutritional",
-                    probability_rank="Primary" if symptom_location == "lower_leaf" else "Secondary",
-                    supporting_evidence="Uniform pale light-green to yellow coloration starting on oldest lower foliage due to N-mobility.",
-                    differentiating_feature="Progresses from bottom up; entire leaf blade yellows uniformly without distinct vein netting."
-                ),
-                DifferentialPossibility(
-                    condition_name="Iron Deficiency (Lime-induced Chlorosis)",
-                    category="nutritional",
-                    probability_rank="Primary" if (soil_ph and soil_ph > 7.5) else "Secondary",
-                    supporting_evidence="Interveinal chlorosis on youngest terminal flush leaves; veins remain sharply dark green.",
-                    differentiating_feature="Appears exclusively on top young leaves; exacerbated by alkaline/calcareous soils (pH > 7.5)."
-                ),
-                DifferentialPossibility(
-                    condition_name="Waterlogging / Poor Aeration",
-                    category="water_stress",
-                    probability_rank="Alternative",
-                    supporting_evidence="Root oxygen deprivation impairs nutrient uptake, triggering sudden whole-plant yellowing.",
-                    differentiating_feature="Accompanied by root discoloration and soggy soil texture."
-                )
-            ]
+        if crop_norm == "Tomato":
+            # Case A: Yellowing / Chlorosis
+            if "yellow" in symptom_lower or "chlorosis" in symptom_lower or "pale" in symptom_lower:
+                differentials = [
+                    DifferentialPossibility(
+                        condition_name="Nitrogen Translocation Deficiency",
+                        category="nutritional",
+                        probability_rank="Primary" if symptom_location == "lower_leaf" else "Secondary",
+                        supporting_evidence="Uniform pale yellowing starting on oldest lower foliage due to mobile nitrogen salvage.",
+                        differentiating_feature="Progresses from lower foliage upwards; entire blade yellows without prominent vein netting."
+                    ),
+                    DifferentialPossibility(
+                        condition_name="Iron Chlorosis (Lime-induced)",
+                        category="nutritional",
+                        probability_rank="Primary" if (soil_ph and soil_ph > 7.5) else "Secondary",
+                        supporting_evidence="Interveinal chlorosis on youngest terminal leaflets; veins remain distinct green.",
+                        differentiating_feature="Appears exclusively on apical/youngest leaves; prevalent in calcareous alkaline soils."
+                    ),
+                    DifferentialPossibility(
+                        condition_name="Root Asphyxiation / Soil Compaction",
+                        category="water_stress",
+                        probability_rank="Alternative",
+                        supporting_evidence="Anaerobic root stress impairs macro-nutrient uptake.",
+                        differentiating_feature="Accompanied by root discoloration and slow soil percolation."
+                    )
+                ]
 
-            if not has_soil_test:
-                missing_data.append("Recent Soil Test (pH, Organic Carbon, Available Nitrogen). Leaf yellowing cannot be definitively distinguished between N deficiency and Fe chlorosis without soil pH verification.")
+                missing_data.append("Certified Soil Testing Laboratory Report (pH, EC, Organic Carbon, Available N).")
+                missing_data.append("Recent irrigation frequency and soil moisture depth measurement.")
 
-            cultural_practices = [
-                "Inspect irrigation drainage and check root zones for rotting or nematode galls.",
-                "Ensure proper field drainage before applying fertilizers.",
-                "If soil is alkaline (pH > 7.8), apply well-decomposed FYM (5 tonnes/acre) to improve micronutrient availability."
-            ]
+                cultural_practices = [
+                    "Perform field drainage check to eliminate standing water and improve root zone aeration.",
+                    "Do not apply synthetic nitrogen without soil test confirmation; excess nitrogen increases vegetative succulence and fungal susceptibility.",
+                    "Incorporate organic compost / well-decomposed FYM (5 tonnes/acre) to buffer soil pH and enhance nutrient availability naturally."
+                ]
 
-            # Recommend standard FCO certified nutritional grade
-            fco_item = FCO_FERTILIZER_REGISTRY[0]  # 19-19-19
-            verified_products.append(ProductRecommendationDetail(
-                brand_name=fco_item.grade_name,
-                active_ingredient="Water Soluble NPK (19:19:19)",
-                formulation="100% Water Soluble Crystals",
-                category="Fertilizer (FCO Standard)",
-                approved_dosage_per_acre="1.0 kg in 200 Liters water (0.5% foliar spray)",
-                pre_harvest_interval_days=0,
-                registration_authority="FCO 1985 Schedule I",
-                registration_number="FCO-NPK-WS-191919",
-                source_citation=fco_item.source_citation,
-                safety_cautions="Do not spray in harsh midday sun. Spray early morning or after 4 PM."
-            ))
+            # Case B: Blight / Spots / Lesions / Rings
+            elif any(w in symptom_lower for w in ["blight", "spot", "lesion", "ring", "concentric"]):
+                differentials = [
+                    DifferentialPossibility(
+                        condition_name="Early Blight (Alternaria solani)",
+                        category="fungal",
+                        probability_rank="Primary",
+                        supporting_evidence="Dark brown to black necrotic spots with characteristic target-like concentric rings on older leaves.",
+                        differentiating_feature="Concentric target rings with yellow halo; does not cause rapid purplish-black watery rot."
+                    ),
+                    DifferentialPossibility(
+                        condition_name="Bacterial Leaf Spot (Xanthomonas spp.)",
+                        category="bacterial",
+                        probability_rank="Secondary",
+                        supporting_evidence="Small, water-soaked circular lesions turning dark brown with translucent greasy halos.",
+                        differentiating_feature="Angular greasy appearance; requires laboratory bacteriological verification."
+                    ),
+                    DifferentialPossibility(
+                        condition_name="Late Blight (Phytophthora infestans)",
+                        category="fungal",
+                        probability_rank="Alternative",
+                        supporting_evidence="Large water-soaked dark lesions, rapid wilting, white downy sporulation under humid canopy.",
+                        differentiating_feature="Progresses rapidly in cool humid weather; rots both foliage and green fruit."
+                    )
+                ]
 
-        # Example Case 2: Blight / Spots / Lesions
-        elif "blight" in symptom_lower or "spot" in symptom_lower or "lesion" in symptom_lower:
-            differentials = [
-                DifferentialPossibility(
-                    condition_name="Early Blight (Alternaria solani)",
-                    category="fungal",
-                    probability_rank="Primary",
-                    supporting_evidence="Dark brown to black necrotic spots with characteristic target-like concentric rings on older foliage.",
-                    differentiating_feature="Concentric target rings with yellow halo; does not cause rapid water-soaked purplish rot."
-                ),
-                DifferentialPossibility(
-                    condition_name="Bacterial Leaf Spot (Xanthomonas)",
-                    category="bacterial",
-                    probability_rank="Secondary",
-                    supporting_evidence="Small, greasy, water-soaked circular lesions that turn dark brown with translucent halos.",
-                    differentiating_feature="Lesions appear angular and greasy; white bacterial ooze under compound microscope."
-                ),
-                DifferentialPossibility(
-                    condition_name="Late Blight (Phytophthora infestans)",
-                    category="fungal",
-                    probability_rank="Alternative",
-                    supporting_evidence="Large irregular water-soaked spots, rapid wilting, white downy sporulation under humid canopy.",
-                    differentiating_feature="Rapidly blackens foliage and fruit in cool wet weather."
-                )
-            ]
+                cultural_practices = [
+                    "Practice prompt sanitary roguing: prune lower infected leaves touching the ground and dispose of them outside the field.",
+                    "Switch from overhead sprinkler to drip irrigation to prevent prolonged leaf wetness (reduces fungal spore germination).",
+                    "Maintain 60cm row spacing to facilitate canopy airflow and lower relative humidity."
+                ]
+                missing_data.append("Macro photograph of upper and lower leaf lesion for pathological verification.")
+                missing_data.append("Previous chemical spray history for resistance management.")
 
-            cultural_practices = [
-                "Prune lower infected leaves touching the soil surface and burn or bury them away from field.",
-                "Avoid overhead sprinkler irrigation; transition to drip to keep foliage dry.",
-                "Maintain 60cm row spacing to facilitate canopy aeration and reduce relative humidity."
-            ]
-
-            # Retrieve CIB&RC approved registered fungicide
-            cibrc_item = CIBRC_TOMATO_REGISTRY[0]  # Mancozeb 75% WP
-            verified_products.append(ProductRecommendationDetail(
-                brand_name=cibrc_item.brand_name,
-                active_ingredient=cibrc_item.active_ingredient,
-                formulation=cibrc_item.formulation,
-                category="CIB&RC Registered Fungicide",
-                approved_dosage_per_acre=cibrc_item.approved_dosage_per_acre,
-                pre_harvest_interval_days=cibrc_item.waiting_period_days,
-                registration_authority="CIB&RC",
-                registration_number=cibrc_item.registration_no,
-                source_citation=cibrc_item.source_citation,
-                safety_cautions=cibrc_item.safety_instructions
-            ))
+            else:
+                differentials = [
+                    DifferentialPossibility(
+                        condition_name="Unclassified Foliar Distress in Tomato",
+                        category="investigative",
+                        probability_rank="Primary",
+                        supporting_evidence=f"Observed symptom description '{symptom_description}' requires physical examination.",
+                        differentiating_feature="Awaiting high-resolution lesion macro image and field scout assessment."
+                    )
+                ]
+                cultural_practices = [
+                    "Isolate symptomatic plants if localized to prevent potential disease spread.",
+                    "Contact local Krishi Vigyan Kendra (KVK) or University Agronomist for physical inspection."
+                ]
+                missing_data.append("Close-up image of leaf, stem, and root collar.")
 
         else:
-            # General unknown symptom
+            # Crop not supported for chemical/nutritional diagnosis
             differentials = [
                 DifferentialPossibility(
-                    condition_name="Undetermined Foliar Distress",
-                    category="investigative",
+                    condition_name=f"General Foliar Distress on {crop_norm}",
+                    category="unsupported_crop",
                     probability_rank="Primary",
-                    supporting_evidence=f"Observed description '{symptom_description}' requires physical examination.",
-                    differentiating_feature="Awaiting high-resolution lesion macro image and field scout assessment."
+                    supporting_evidence=f"Crop '{crop_norm}' is not covered by the current pilot knowledge base.",
+                    differentiating_feature="Pilot is focused exclusively on Tomato in Telangana."
                 )
             ]
-            missing_data.append("Clear close-up photograph of leaf upper and lower surface")
-            missing_data.append("Recent chemical application and fertilizer history")
-            requires_escalation = True
-            cultural_practices = ["Isolate affected plants if localized. Contact local Krishi Vigyan Kendra (KVK)."]
+            cultural_practices = [
+                f"Refer {crop_norm} crop symptoms to your district Agricultural Officer or University Extension Center."
+            ]
+            missing_data.append(f"Statutory CIB&RC package of practices for {crop_norm}.")
 
+        # CRITICAL SAFETY DIRECTIVE:
+        # Zero unverified chemical prescriptions or invented dosages.
+        # Products list remains empty with explicit safety notice until official integration is validated.
         return DiagnosticInterventionReport(
-            crop=crop,
+            crop=crop_norm,
             primary_symptom=symptom_description,
             symptom_location=symptom_location,
             differential_diagnosis=differentials,
-            recommended_intervention_category="Integrated Crop Management (Cultural + Target-specific Intervention)",
-            verified_regulatory_products=verified_products,
+            recommended_intervention_category="Cultural & Sanitary Management (Chemical Prescriptions Disabled for Safety)",
+            verified_regulatory_products=[],  # Strictly empty: NO unverified chemical dosages or fake CIB&RC numbers
             non_chemical_cultural_controls=cultural_practices,
             missing_critical_data=missing_data,
-            confidence_level="High (Evidence-Led)" if not requires_escalation else "Requires Agronomic Escalation",
-            requires_expert_escalation=requires_escalation,
-            regulatory_disclaimer="All chemical inputs comply with CIB&RC approved labels under the Insecticides Act, 1968 and FCO 1985. Always adhere strictly to prescribed label dosage and Pre-Harvest Interval (PHI)."
+            confidence_level="Differential Analysis Only (Field Confirmation Required)",
+            requires_expert_escalation=True,
+            regulatory_disclaimer=(
+                "SAFETY NOTICE: Unverified pesticide dosages and synthetic fertilizer prescriptions are disabled. "
+                "KRISHIVA AI adheres strictly to the Insecticides Act (1968) and Fertiliser Control Order (1985). "
+                "Never apply chemical plant protection products without consultation with a certified agricultural extension officer."
+            )
         )

@@ -1,7 +1,7 @@
 """
 KRISHIVA AI — Real-time & Historical Weather Ingestion Adapter
-Interfaces with Open-Meteo API (with IMD fallback support) to acquire measured
-hourly/daily agricultural weather parameters and forecast horizons.
+Interfaces with Open-Meteo API.
+Distinguishes live measured observations from fallback weather.
 """
 
 from datetime import datetime
@@ -21,6 +21,7 @@ class WeatherMeasurement(BaseModel):
     wind_speed_kmh: Optional[float] = None
     solar_radiation_w_m2: Optional[float] = None
     is_forecast: bool = False
+    is_live_measured: bool = True
 
 
 class WeatherForecastDaily(BaseModel):
@@ -37,6 +38,8 @@ class WeatherSnapshot(BaseModel):
     longitude: float
     retrieval_timestamp: datetime = Field(default_factory=datetime.utcnow)
     provider: str = "open-meteo"
+    is_live_measured: bool = True
+    status_label: str = "LIVE MEASURED"
     current: WeatherMeasurement
     hourly_history_24h: List[WeatherMeasurement] = []
     forecast_7d: List[WeatherForecastDaily] = []
@@ -61,12 +64,11 @@ class WeatherAdapter:
         }
 
         try:
-            logger.info(f"Querying weather for coordinates ({latitude:.4f}, {longitude:.4f})")
+            logger.info(f"Querying live Open-Meteo weather for coordinates ({latitude:.4f}, {longitude:.4f})")
             resp = requests.get(self.BASE_URL, params=params, timeout=10)
             resp.raise_for_status()
             data = resp.json()
 
-            # Parse current observation
             curr_raw = data.get("current", {})
             current_obs = WeatherMeasurement(
                 timestamp=datetime.fromisoformat(curr_raw.get("time", datetime.utcnow().isoformat())),
@@ -74,10 +76,10 @@ class WeatherAdapter:
                 relative_humidity_percent=curr_raw.get("relative_humidity_2m", 65.0),
                 precipitation_mm=curr_raw.get("precipitation", 0.0),
                 wind_speed_kmh=curr_raw.get("wind_speed_10m", 5.0),
-                is_forecast=False
+                is_forecast=False,
+                is_live_measured=True
             )
 
-            # Parse 24h past observed
             hourly_raw = data.get("hourly", {})
             hourly_history: List[WeatherMeasurement] = []
             h_times = hourly_raw.get("time", [])[:24]
@@ -91,10 +93,10 @@ class WeatherAdapter:
                     temperature_c=float(temp),
                     relative_humidity_percent=float(hum),
                     precipitation_mm=float(prec),
-                    is_forecast=False
+                    is_forecast=False,
+                    is_live_measured=True
                 ))
 
-            # Parse 7d daily forecasts
             daily_raw = data.get("daily", {})
             forecast_7d: List[WeatherForecastDaily] = []
             d_times = daily_raw.get("time", [])
@@ -116,26 +118,31 @@ class WeatherAdapter:
             return WeatherSnapshot(
                 latitude=latitude,
                 longitude=longitude,
+                provider="open-meteo-live",
+                is_live_measured=True,
+                status_label="LIVE MEASURED",
                 current=current_obs,
                 hourly_history_24h=hourly_history,
                 forecast_7d=forecast_7d
             )
 
         except Exception as e:
-            logger.warning(f"Weather API request failed ({e}). Returning calibrated seasonal fallback for Telangana.")
-            # Fallback to realistic seasonal climate baseline for Telangana semi-arid zone
+            logger.warning(f"Weather API request failed ({e}). Returning explicitly marked calibrated regional fallback.")
             now = datetime.utcnow()
             return WeatherSnapshot(
                 latitude=latitude,
                 longitude=longitude,
                 provider="calibrated-regional-fallback",
+                is_live_measured=False,
+                status_label="CALIBRATED REGIONAL FALLBACK (OFFLINE)",
                 current=WeatherMeasurement(
                     timestamp=now,
                     temperature_c=28.5,
                     relative_humidity_percent=72.0,
                     precipitation_mm=1.2,
                     wind_speed_kmh=8.5,
-                    is_forecast=False
+                    is_forecast=False,
+                    is_live_measured=False
                 ),
                 hourly_history_24h=[],
                 forecast_7d=[

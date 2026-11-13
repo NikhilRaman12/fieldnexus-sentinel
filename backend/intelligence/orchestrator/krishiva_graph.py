@@ -1,19 +1,18 @@
 """
 KRISHIVA AI — Central LangGraph Multi-Agent Orchestrator
 Coordinates three independent intelligence subgraphs:
-1. Crop Guard Subgraph (Pest, disease, weather, crop risk)
-2. Market Sense Subgraph (APMC discovery, arrivals, price forecasting, net realization)
-3. Input Trust Subgraph (Differential diagnosis, CIB&RC/FCO regulatory verification)
+1. Crop Guard Subgraph (Disease rules for Tomato; explicit rejection of unsupported crops)
+2. Market Sense Subgraph (APMC discovery, arrivals, net realization with transparent cost disclosures)
+3. Input Trust Subgraph (Differential diagnosis first, non-chemical controls, no unverified chemical dosages)
 """
 
 from typing import Dict, Any, List, Optional, TypedDict
 from datetime import datetime
 from langgraph.graph import StateGraph, END
-from pydantic import BaseModel
 
-from backend.intelligence.crop_guard.crop_guard_engine import CropGuardEngine, RiskAssessmentOutput
-from backend.intelligence.market_sense.net_realization_optimizer import NetRealizationOptimizer, SellingRecommendationReport
-from backend.intelligence.input_trust.input_trust_engine import InputTrustEngine, DiagnosticInterventionReport
+from backend.intelligence.crop_guard.crop_guard_engine import CropGuardEngine
+from backend.intelligence.market_sense.net_realization_optimizer import NetRealizationOptimizer
+from backend.intelligence.input_trust.input_trust_engine import InputTrustEngine
 from backend.integrations.weather.weather_adapter import WeatherAdapter
 from backend.integrations.agmarknet.agmarknet_adapter import AgmarknetAdapter
 from backend.integrations.google_ai.gemini_client import GoogleAIProvider, GeminiExplanationRequest
@@ -94,7 +93,6 @@ class KrishivaOrchestrator:
     def _context_and_telemetry_node(self, state: KrishivaAgentState) -> Dict[str, Any]:
         """Fetches live meteorological observations and APMC market prices."""
         trace = list(state.get("execution_trace", []))
-        trace.append("Executed Context & Telemetry Node: Acquired live weather and mandi baseline.")
         errors = list(state.get("errors", []))
 
         weather_dict = None
@@ -107,8 +105,11 @@ class KrishivaOrchestrator:
                 "relative_humidity_percent": weather_snap.current.relative_humidity_percent,
                 "precipitation_mm": weather_snap.current.precipitation_mm,
                 "wind_speed_kmh": weather_snap.current.wind_speed_kmh,
-                "forecast_days": len(weather_snap.forecast_7d)
+                "forecast_days": len(weather_snap.forecast_7d),
+                "is_live_measured": weather_snap.is_live_measured,
+                "status_label": weather_snap.status_label
             }
+            trace.append(f"Context Node: Weather acquired ({weather_snap.status_label}).")
         except Exception as e:
             errors.append(f"Weather acquisition error: {str(e)}")
 
@@ -119,6 +120,8 @@ class KrishivaOrchestrator:
                 limit=10
             )
             mandi_list = [m.model_dump() for m in mandis]
+            src = mandi_list[0]["data_source"] if mandi_list else "UNKNOWN"
+            trace.append(f"Context Node: APMC mandi telemetry acquired ({src}).")
         except Exception as e:
             errors.append(f"Mandi acquisition error: {str(e)}")
 
@@ -130,39 +133,53 @@ class KrishivaOrchestrator:
         }
 
     def _crop_guard_node(self, state: KrishivaAgentState) -> Dict[str, Any]:
-        """Evaluates micro-climatic pest and disease risks."""
+        """Evaluates micro-climatic pest and disease risks with strict crop validation."""
         trace = list(state.get("execution_trace", []))
-        trace.append("Executed Crop Guard Subgraph: Evaluated disease favorability indexes.")
+        errors = list(state.get("errors", []))
 
+        crop = state.get("crop", "Tomato")
         weather = state.get("weather_data") or {
             "temperature_c": 28.0,
             "relative_humidity_percent": 75.0,
-            "precipitation_mm": 2.0
+            "precipitation_mm": 2.0,
+            "is_live_measured": False,
+            "provider": "fallback"
         }
 
-        assessments = self.crop_guard_engine.evaluate_tomato_risks(
-            temperature_c=weather["temperature_c"],
-            relative_humidity_percent=weather["relative_humidity_percent"],
-            rainfall_24h_mm=weather["precipitation_mm"],
-            crop_stage=state.get("crop_stage", "flowering"),
-            variety=state.get("variety", "Hybrid Tomato"),
-            district=state.get("district", "Rangareddy")
-        )
-
-        requires_review = any(a.human_review_required for a in assessments)
-
-        return {
-            "crop_guard_results": [a.model_dump() for a in assessments],
-            "human_review_required": requires_review,
-            "execution_trace": trace
-        }
+        try:
+            assessments = self.crop_guard_engine.evaluate_crop_risks(
+                crop=crop,
+                temperature_c=weather["temperature_c"],
+                relative_humidity_percent=weather["relative_humidity_percent"],
+                rainfall_24h_mm=weather["precipitation_mm"],
+                crop_stage=state.get("crop_stage", "flowering"),
+                variety=state.get("variety", "Hybrid Tomato"),
+                district=state.get("district", "Rangareddy"),
+                weather_provider=weather.get("provider", "open-meteo"),
+                is_live_weather=weather.get("is_live_measured", True)
+            )
+            trace.append(f"Crop Guard Node: Evaluated {len(assessments)} rule-based epidemiological indicators for {crop}.")
+            return {
+                "crop_guard_results": [a.model_dump() for a in assessments],
+                "human_review_required": any(a.human_review_required for a in assessments),
+                "execution_trace": trace
+            }
+        except ValueError as e:
+            errors.append(str(e))
+            trace.append(f"Crop Guard Node REJECTED: {str(e)}")
+            return {
+                "crop_guard_results": [],
+                "human_review_required": True,
+                "errors": errors,
+                "execution_trace": trace
+            }
 
     def _input_trust_node(self, state: KrishivaAgentState) -> Dict[str, Any]:
-        """Executes differential diagnosis and CIB&RC/FCO regulatory input validation."""
+        """Executes differential diagnosis and non-chemical cultural guidance."""
         trace = list(state.get("execution_trace", []))
-        trace.append("Executed Input Trust Subgraph: Completed differential diagnosis and regulatory verification.")
+        trace.append("Input Trust Node: Differential diagnosis completed (unverified chemical prescriptions disabled).")
 
-        query = state.get("farmer_query") or "Concentric dark brown spots on lower foliage with slight yellow halos."
+        query = state.get("farmer_query") or "Foliar spots on lower leaves."
         loc = state.get("symptom_location") or "lower_leaf"
 
         report = self.input_trust_engine.diagnose_and_recommend(
@@ -180,52 +197,60 @@ class KrishivaOrchestrator:
         }
 
     def _market_sense_node(self, state: KrishivaAgentState) -> Dict[str, Any]:
-        """Calculates net realization across nearby APMC mandis."""
+        """Calculates net realization across APMC mandis with validated quantity > 0."""
         trace = list(state.get("execution_trace", []))
-        trace.append("Executed Market Sense Subgraph: Computed net realization across APMC mandis.")
+        errors = list(state.get("errors", []))
 
-        qty = state.get("harvest_quantity_quintals") or 50.0  # Default 50 quintals (5 tonnes)
+        qty = state.get("harvest_quantity_quintals") or 40.0
         mandi_pool = self.agmarknet_adapter.TELANGANA_MANDIS
 
-        report = self.market_sense_engine.optimize_markets(
-            farmer_lat=state["latitude"],
-            farmer_lon=state["longitude"],
-            commodity=state["crop"],
-            quantity_quintals=qty,
-            candidate_mandis=mandi_pool,
-            farmer_district=state["district"]
-        )
-
-        return {
-            "market_sense_results": report.model_dump(),
-            "execution_trace": trace
-        }
+        try:
+            report = self.market_sense_engine.optimize_markets(
+                farmer_lat=state["latitude"],
+                farmer_lon=state["longitude"],
+                commodity=state["crop"],
+                quantity_quintals=qty,
+                candidate_mandis=mandi_pool,
+                farmer_district=state["district"]
+            )
+            trace.append(f"Market Sense Node: Optimized net realization for {qty} quintals across {len(mandi_pool)} mandis.")
+            return {
+                "market_sense_results": report.model_dump(),
+                "execution_trace": trace
+            }
+        except Exception as e:
+            errors.append(f"Market Sense error: {str(e)}")
+            trace.append(f"Market Sense Node failed: {str(e)}")
+            return {
+                "market_sense_results": None,
+                "errors": errors,
+                "execution_trace": trace
+            }
 
     def _supervisor_synthesis_node(self, state: KrishivaAgentState) -> Dict[str, Any]:
-        """Synthesizes unified farm intelligence using Google Gemini."""
+        """Synthesizes unified farm intelligence using Google Gemini with strict safety boundaries."""
         trace = list(state.get("execution_trace", []))
-        trace.append("Executed Supervisor Synthesis Node: Formulated multilingual farmer explanation.")
+        trace.append("Supervisor Node: Formulated verified farmer advisory explanation.")
 
         cg_summary = ""
         if state.get("crop_guard_results"):
             top_risk = state["crop_guard_results"][0]
-            cg_summary += f"Crop risk: {top_risk['threat']} ({top_risk['risk_category']}). "
+            cg_summary += f"Crop risk: {top_risk['threat']} (Rule Risk: {top_risk['risk_category']}). "
 
         it_summary = ""
         if state.get("input_trust_results"):
             it = state["input_trust_results"]
-            prods = ", ".join([p["brand_name"] for p in it.get("verified_regulatory_products", [])])
-            it_summary += f"Diagnosis: {it['primary_symptom']}. Approved inputs: {prods}. "
+            it_summary += f"Diagnosis: {it['primary_symptom']}. Cultural management recommended: {'; '.join(it.get('non_chemical_cultural_controls', [])[:2])}. "
 
         ms_summary = ""
         if state.get("market_sense_results"):
             rec_mandi = state["market_sense_results"]["recommended_mandi"]
-            ms_summary += f"Market advisory: Sell at {rec_mandi['market_name']} for net realization ₹{rec_mandi['net_realization_per_quintal']}/qtl. "
+            ms_summary += f"Selling recommendation: {rec_mandi['market_name']} yields net realization ₹{rec_mandi['net_realization_per_quintal']:.2f}/qtl. "
 
         combined_diagnostic = f"{cg_summary} {it_summary} {ms_summary}"
 
         explanation_req = GeminiExplanationRequest(
-            farmer_query=state.get("farmer_query") or "Tomato crop health and selling advisory",
+            farmer_query=state.get("farmer_query") or "Crop health and selling advisory",
             crop=state.get("crop", "Tomato"),
             diagnostics_summary=combined_diagnostic,
             preferred_language=state.get("preferred_language", "en")
@@ -233,9 +258,11 @@ class KrishivaOrchestrator:
 
         explanation_res = self.google_ai_provider.explain_advisory_to_farmer(explanation_req)
 
+        status_outcome = "COMPLETED" if not state.get("errors") else "COMPLETED_WITH_WARNINGS"
+
         return {
             "synthesized_explanation": explanation_res.model_dump(),
-            "status": "COMPLETED",
+            "status": status_outcome,
             "execution_trace": trace
         }
 
@@ -243,5 +270,5 @@ class KrishivaOrchestrator:
         """Executes full LangGraph pipeline."""
         logger.info(f"Initiating KRISHIVA LangGraph Orchestrator for {initial_state.get('crop')} in {initial_state.get('district')}")
         result = self.workflow.invoke(initial_state)
-        logger.info("KRISHIVA LangGraph workflow completed.")
+        logger.info(f"KRISHIVA LangGraph workflow completed with status {result.get('status')}")
         return result

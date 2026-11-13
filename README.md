@@ -1,173 +1,107 @@
-feature/kaggriculture-agent
-# KRISHIVA AI — Farm-to-Market Agricultural Intelligence Platform
+# KRISHIVA AI — Farm-to-Market Agricultural Decision Intelligence
 
-> **Core Philosophy:** Protect the Crop. Trust the Input. Sell Smarter.
+> **Buildathon Prototype Edition**  
+> **Core Philosophy:** Protect the Crop. Trust the Input. Sell Smarter.  
+> **Pilot Region:** Telangana (Tomato Focus)
 
-**KRISHIVA AI** is an evidence-led agricultural decision intelligence platform designed for Indian farmers, Farmer Producer Organizations (FPOs), agronomists, and agricultural enterprises. It bridges the gap between field pathology, regulatory compliance, and market economics through a LangGraph multi-agent architecture and Google Gemini reasoning.
+KRISHIVA AI is an evidence-led agricultural decision intelligence platform designed for Indian farmers, Farmer Producer Organizations (FPOs), and agronomists. It bridges field pathology, statutory regulatory compliance, and market logistics through a LangGraph multi-agent architecture and Google Gemini reasoning.
 
 ---
 
-## 🌟 The Three Core Intelligence Systems
+## 🌟 Architecture & Core Systems
 
 ```mermaid
 graph TD
-    A[KRISHIVA Supervisor LangGraph] --> B[🛡️ Crop Guard Subgraph]
+    A[KRISHIVA Supervisor LangGraph] --> B[🛡️ Crop Guard Subgraph (Tomato)]
     A --> C[🔬 Input Trust Subgraph]
     A --> D[📈 Market Sense Subgraph]
     
-    B --> B1[Live Open-Meteo & IMD Telemetry]
-    B --> B2[ICAR / Epidemiological Infection Thresholds]
+    B --> B1[Open-Meteo Weather Telemetry]
+    B --> B2[ICAR-IIHR Epidemiological Rules]
     
-    C --> C1[Differential Diagnostic Engine]
-    C --> C2[Statutory CIB&RC & FCO Registry Check]
+    C --> C1[Crop-Aware Differential Diagnosis]
+    C --> C2[Non-Chemical Cultural Practices & Agronomist Escalation]
     
-    D --> D1[AGMARKNET / data.gov.in Live APMC Arrivals]
+    D --> D1[AGMARKNET / data.gov.in (Demo / Live Adapter)]
     D --> D2[Net Realization Freight & Perishability Matrix]
     
     B & C & D --> E[Google AI Gemini Multilingual Synthesizer]
-    E --> F[Farmer & FPO Action Plan]
+    E --> F[Transparent Farmer Action Plan]
 ```
 
 ### 1. Crop Guard (Crop & Disease Intelligence)
-- Real-time microclimatic disease favorability indices (temperature, relative humidity, leaf wetness, rainfall).
-- Epidemiological risk assessment for Early Blight (*Alternaria solani*), Late Blight (*Phytophthora infestans*), and Whitefly vectors.
-- Transparent rule & calibrated probabilistic outputs with clear uncertainty markers.
+- **Scope:** Restricted specifically to Tomato in Telangana. Non-tomato crops (e.g., Chilli, Cotton) are explicitly rejected with validation errors to prevent silent application of invalid pathology rules.
+- **Rule-Based Categories:** Reports transparent epidemiological risk categories (`low`, `medium`, `high`, `severe`) derived from ICAR-IIHR protocols. Does not assign fabricated ML probabilities.
+- **Weather Telemetry:** Ingests Open-Meteo observations and clearly indicates whether live measured weather or calibrated regional fallback was used.
 
-### 2. Market Sense (Market Discovery & Net Realization Optimization)
-- Ingests official AGMARKNET and e-NAM mandi modal prices and arrivals.
-- Computes quantity-aware net realization using the formula:
-  $$\text{Net Realization} = \text{Gross Revenue} - (\text{Freight} + \text{Handling} + \text{Mandi Fees} + \text{Transit Quality Loss})$$
-- Prevents misleading recommendations based solely on distant high modal prices.
+### 2. Market Sense (Mandi Discovery & Net Realization Optimization)
+- **Net Realization Formula:**
+  $$\text{Net Realization} = \text{Gross Revenue} - (\text{Freight} + \text{Handling Hamali} + \text{Mandi Fees} + \text{Transit Quality Loss})$$
+- **Transparent Cost Disclosures:** Every transport expense, truck count, handling fee, and perishability deduction is explicitly broken down and exposed.
+- **Data Provenance:** Clearly distinguishes live API observations from historical simulated reference benchmarks (`DEMO_SIMULATED`). Requires quantity > 0.
 
-### 3. Input Trust (Statutory Regulatory Input Verification)
-- **Differential Diagnosis First:** Prevents false single-cause diagnoses (e.g. distinguishing nitrogen deficiency from iron chlorosis or waterlogging).
-- **Statutory CIB&RC & FCO Compliance:** Only recommends pesticides with verified registration numbers, approved crop-target usages, exact label dosages, and Pre-Harvest Intervals (PHI).
-
----
-
-## 🏗️ Repository Architecture
-
-```
-fieldnexus-sentinel/
-├── backend/
-│   ├── api/v1/routes.py            # FastAPI endpoints
-│   ├── config/settings.py          # Pydantic Settings
-│   ├── database/models.py          # SQLAlchemy PostgreSQL/SQLite models
-│   ├── governance/                 # Data provenance & audit registry
-│   ├── integrations/               # Open-Meteo, AGMARKNET, Google AI
-│   ├── intelligence/               # Crop Guard, Market Sense, Input Trust
-│   │   └── orchestrator/           # LangGraph supervisor workflow
-│   ├── knowledge/                  # CIB&RC and FCO regulatory standards
-│   ├── ml/training/                # Scikit-learn temporal training & model cards
-│   └── schemas/api_contracts.py    # Typed Pydantic request/response schemas
-├── frontend/                       # React 18 + TypeScript + Vite UI
-├── data/                           # Verified raw, reference & interim datasets
-├── models/                         # Trained model artifacts & evaluation cards
-├── tests/unit/                     # Automated Pytest suite (10/10 verified)
-└── docs/                           # Architecture, audit, and system documentation
-```
+### 3. Input Trust (Safety-First Diagnostic Intelligence)
+- **Differential Diagnosis First:** Identifies potential competing causes (e.g. Nitrogen translocation deficiency vs Iron chlorosis vs root asphyxiation) rather than diagnosing on leaf yellowing alone.
+- **Zero Unverified Chemical Prescriptions:** Unverified chemical pesticides and dosages are strictly disabled. Provides non-chemical sanitary practices (roguing, drip irrigation, airflow spacing) and mandatory agronomist escalation.
 
 ---
 
-## 🚀 Quickstart & Local Setup
+## ⚖️ Honest ML & System Status
 
-### 1. Prerequisites
+| Component | Architecture / Model | Operational Status | Production Ready Claim | Limitations / Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **APMC Price Forecaster** | Random Forest Regressor | `SIMULATION_ONLY` | **NO** | Trained on synthetic seasonal time-series for demo illustration; cannot guarantee market prices. |
+| **Tomato Disease Risk** | ICAR Microclimate Threshold Matrix | `RULE_BASED_OPERATIONAL` | **NO (Prototype)** | Evaluates canopy favorability; physical field scout confirmation required. |
+| **Crop Disease Computer Vision** | EfficientNet / MobileNet | `NOT_TRAINED` | **NO** | No field-validated weights deployed in this buildathon phase. Zero fabricated weights. |
+| **Mandi Price Ingestion** | data.gov.in / AGMARKNET Adapter | `DEMO_SIMULATED` (Fallback) | **NO** | Operates in simulated mode unless official government API key is supplied. |
+
+---
+
+## 🔒 Security & Data Protection
+- **No Tracked Credentials:** Active `.env` file removed from source control; `.gitignore` strictly enforced.
+- **CORS Restricted:** Restricted to local frontend origins (`http://localhost:3000`, `http://127.0.0.1:3000`).
+- **Data Masking:** Public farm listings mask farmer names (`N***`) and omit phone numbers.
+- **Explicit Consent:** Farmer registration enforces explicit consent recording.
+
+---
+
+## 🚀 Exact Local Run Instructions
+
+### 1. Requirements
 - Python 3.11+
 - Node.js 18+ and npm
 
-### 2. Backend Setup
-```bash
-# Clone the repository
-git clone https://github.com/NikhilRaman12/fieldnexus-sentinel.git
-cd fieldnexus-sentinel
-
-# Configure environment
+### 2. Backend Startup (FastAPI + LangGraph)
+```powershell
+# In project root
 cp .env.example .env
 
-# Run database migrations / init
-python -c "from backend.database.session import init_db; init_db()"
+# Run database table initialization
+python -c "import sys; sys.path.insert(0, '.'); from backend.database.session import init_db; init_db()"
 
-# Run all automated tests (10/10 passing)
-pytest tests/unit/test_krishiva_platform.py -v
+# Execute all 10 automated unit & integration tests
+python -m pytest tests/unit/test_krishiva_platform.py -v
 
-# Start FastAPI Server
+# Start FastAPI server
 uvicorn backend.api.v1.routes:app --host 0.0.0.0 --port 8000 --reload
 ```
-API Documentation will be live at `http://localhost:8000/docs`.
+API docs available at: `http://localhost:8000/docs`
 
-### 3. Frontend Setup
-```bash
+### 3. Frontend Startup (React 18 + TypeScript + Vite)
+```powershell
 cd frontend
 npm install
 npm run build
 npm run dev
 ```
-The KRISHIVA UI will be accessible at `http://localhost:3000`.
+Access the application at: `http://localhost:3000`
 
 ---
 
-## 🔒 Security & Data Provenance
-- Tracked secrets removed from Git index; active `.gitignore` enforcement.
-- Strict data provenance identifiers (`PROV-AGMARKNET-001`, `PROV-WEATHER-003`, `PROV-CIBRC-004`).
-- All recommendations carry clear regulatory citations and expert human escalation boundaries.
-=======
-# FieldNexus-Sentinel
+## 🗺️ Buildathon Technical Differentiation & Roadmap
 
-A project that does not just run — it **orchestrates**.  
-A pipeline that does not just process — it **transforms**.  
-An agent system that does not just analyze — it **reveals unseen connections** across climate, soil, rainfall, pesticides, supply chains, sustainability, and yield.
-
----
-
-## Overview
-FieldNexus Sentinel was built for the **Google 5‑Day AI Agents Intensive (Nov 10–14, 2025)** under the **Agents for Good** track.  
-It is not another notebook. It is a **mission‑driven architecture** that turns fragmented datasets into **actionable intelligence**.  
-Every agent is a specialist. Together, they form a team that delivers insights with speed, reproducibility, and clarity.
-
----
-
-## Problem
-Agricultural and sustainability datasets are scattered, noisy, inconsistent, and underutilized.  
-Researchers spend hours cleaning, policymakers struggle to interpret, and farmers rarely see the benefit.  
-The gap between raw data and meaningful action is wide — and urgent.
-
----
-
-## Solution
-FieldNexus Sentinel closes that gap with a **multi‑agent pipeline**:
-
-- **DataCleaningAgent**: transforms raw CSVs into clean, usable data  
-- **EDAAgent**: generates summaries that highlight the story inside the numbers  
-- **ModelAgent**: trains models (RandomForest, Neural Network, XGBoost) with reproducibility  
-- **Evaluation Agent**: computes metrics that matter  
-- **InsightAgent**: consolidates results into recruiter‑ready insights  
-- **PipelineAgent**: orchestrates the workflow end‑to‑end  
-- **InferenceAgent**: reserved for future predictive tasks  
-
----
-
-## Features
-- Modularity: each agent is independent yet collaborative  
-- Reproducibility: outputs are consistent, stored in `outputs/reports/insights.json`  
-- Professional polish: documentation, configuration, and logging are complete  
-
-
----
-
-## QuickStart
-
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-2. Run the full agentic pipeline via CLI:
-```bash
-python src/app.py
-```
-
-3. Launch the interactive Web UI Dashboard:
-```bash
-streamlit run src/ui.py
-```
-
+- **Differentiation:** Unlike chatbots that fabricate chemical dosages or uncalibrated probabilities, KRISHIVA AI enforces safety boundaries, differential diagnosis, transparent logistics cost arithmetic, and honest data provenance.
+- **Roadmap:**
+  - Onboard verified CIB&RC statutory gazette database and FCO standard tables.
+  - Implement real-time e-NAM electronic trade integration via authenticated gateway.
+  - Pilot mobile field scout app with Google Gemma on-device offline edge intelligence.

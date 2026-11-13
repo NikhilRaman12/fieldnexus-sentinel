@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'decision' | 'crop_guard' | 'market_sense' | 'input_trust' | 'governance'>('decision');
   const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
   const [crop, setCrop] = useState<string>('Tomato');
   const [district, setDistrict] = useState<string>('Rangareddy');
   const [query, setQuery] = useState<string>('Yellowing lower foliage with dark concentric circular spots');
@@ -11,7 +13,13 @@ export const App: React.FC = () => {
   const [decisionResult, setDecisionResult] = useState<any>(null);
 
   const runDecisionCenter = async () => {
+    if (quantity <= 0) {
+      setErrorMsg('Harvest quantity must be greater than zero quintals.');
+      return;
+    }
+    setErrorMsg(null);
     setLoading(true);
+
     try {
       const res = await fetch('/api/v1/decisions/plan', {
         method: 'POST',
@@ -33,85 +41,20 @@ export const App: React.FC = () => {
           preferred_language: 'en'
         })
       });
+
       if (res.ok) {
         const data = await res.json();
         setDecisionResult(data);
       } else {
-        alert('Workflow execution failed. Backend service is running in local mode.');
+        const errData = await res.json().catch(() => ({}));
+        setErrorMsg(errData.detail || `Service Error: Backend API returned HTTP ${res.status}.`);
+        setDecisionResult(null);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      // Fallback realistic presentation for standalone demonstration
-      setDecisionResult({
-        status: 'COMPLETED',
-        crop: crop,
-        district: district,
-        weather_summary: { temperature_c: 24.5, relative_humidity_percent: 74.0, precipitation_mm: 1.5, provider: 'Open-Meteo Verified' },
-        crop_guard: [
-          {
-            threat: 'Early Blight (Alternaria solani)',
-            risk_category: 'high',
-            calibrated_probability: 0.78,
-            model_or_rule_identifier: 'RULE-ICAR-TOMATO-EB-V1',
-            recommended_monitoring_action: 'Inspect lower leaves for concentric rings; rogue infected foliage.',
-            human_review_required: true
-          },
-          {
-            threat: 'Whitefly (Bemisia tabaci)',
-            risk_category: 'medium',
-            calibrated_probability: 0.45,
-            model_or_rule_identifier: 'RULE-PJTSAU-WHITEFLY-V1',
-            recommended_monitoring_action: 'Install 15 yellow sticky traps per acre.',
-            human_review_required: false
-          }
-        ],
-        market_sense: {
-          recommended_mandi: {
-            market_name: 'Gaddiannaram (Kothapet)',
-            district: 'Rangareddy',
-            distance_km: 28.0,
-            modal_price_qtl: 2550.0,
-            expected_net_realization: 95570.0,
-            net_realization_per_quintal: 2389.25,
-            rank: 1
-          },
-          all_mandis_comparison: [
-            { market_name: 'Gaddiannaram (Kothapet)', distance_km: 28.0, modal_price_qtl: 2550.0, net_realization_per_quintal: 2389.25, total_expenses: 6430.0 },
-            { market_name: 'Bowenpally', distance_km: 15.0, modal_price_qtl: 2400.0, net_realization_per_quintal: 2275.50, total_expenses: 4980.0 },
-            { market_name: 'Suryapet', distance_km: 135.0, modal_price_qtl: 2650.0, net_realization_per_quintal: 2315.00, total_expenses: 13400.0 }
-          ],
-          decision_rationale: 'Gaddiannaram APMC yields the maximum net realization after deducting transport freight, mandi fees, and perishability transit loss.'
-        },
-        input_trust: {
-          primary_symptom: query,
-          differential_diagnosis: [
-            { condition_name: 'Early Blight (Alternaria solani)', probability_rank: 'Primary', supporting_evidence: 'Concentric target-board spots on older foliage.' },
-            { condition_name: 'Nitrogen Deficiency', probability_rank: 'Secondary', supporting_evidence: 'Foliar chlorosis starting on lower canopy.' }
-          ],
-          verified_regulatory_products: [
-            {
-              brand_name: 'Dithane M-45 (Mancozeb 75% WP)',
-              active_ingredient: 'Mancozeb',
-              approved_dosage_per_acre: '600-800 grams in 200L water',
-              pre_harvest_interval_days: 3,
-              registration_authority: 'CIB&RC',
-              registration_number: 'CIR-42115/2003-Mancozeb(WP)-1244',
-              safety_cautions: 'Wear mask. Do not spray within 3 days of harvest.'
-            }
-          ]
-        },
-        synthesized_explanation: {
-          explanation_text: 'Field evidence indicates Early Blight favored by high canopy humidity (74% RH). Prune diseased leaves immediately and spray CIB&RC approved Mancozeb 75% WP at 700g/acre. Dispatch harvest to Gaddiannaram Mandi for optimum net price.',
-          safety_reminder: 'Observe statutory 3-day Pre-Harvest Interval (PHI).'
-        },
-        execution_trace: [
-          'Acquired live meteorological observations from Open-Meteo',
-          'Evaluated ICAR epidemiological infection matrices',
-          'Executed CIB&RC / FCO statutory input verification',
-          'Optimized APMC net realization freight matrix',
-          'Formulated structured farmer advisory via Google Gemini'
-        ]
-      });
+      // HARDENING RULE: Never fabricate fake COMPLETED state or fake pesticide dosages when backend is unavailable
+      setErrorMsg('Backend service unavailable (Connection Refused). Please ensure FastAPI backend is running at http://localhost:8000.');
+      setDecisionResult(null);
     } finally {
       setLoading(false);
     }
@@ -125,26 +68,26 @@ export const App: React.FC = () => {
           <div style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '0.5px' }}>
             KRISHIVA <span style={{ color: '#D4AF37' }}>AI</span>
           </div>
-          <div style={{ fontSize: '12px', opacity: 0.85 }}>Farm-to-Market Agricultural Intelligence Platform</div>
+          <div style={{ fontSize: '12px', opacity: 0.85 }}>Farm-to-Market Agricultural Decision Intelligence (Buildathon Edition)</div>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '16px' }}>
-            📍 Pilot: Telangana (Tomato)
+          <span style={{ fontSize: '12px', backgroundColor: 'rgba(255,255,255,0.1)', padding: '5px 12px', borderRadius: '16px' }}>
+            📍 Pilot: Telangana (Tomato Only)
           </span>
-          <span style={{ fontSize: '13px', backgroundColor: '#2E7D32', color: '#FFF', padding: '6px 12px', borderRadius: '16px' }}>
-            ✓ LangGraph Active
+          <span style={{ fontSize: '12px', backgroundColor: '#37474F', color: '#FFF', padding: '5px 12px', borderRadius: '16px' }}>
+            DEMO / PROTOTYPE
           </span>
         </div>
       </header>
 
-      {/* Navigation Sub-bar */}
+      {/* Navigation Bar */}
       <nav style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E0E6ED', padding: '0 32px', display: 'flex', gap: '24px' }}>
         {[
           { key: 'decision', label: '🌾 Farm Decision Center' },
-          { key: 'crop_guard', label: '🛡️ Crop Guard' },
+          { key: 'crop_guard', label: '🛡️ Crop Guard (Tomato)' },
           { key: 'market_sense', label: '📈 Market Sense' },
-          { key: 'input_trust', label: '🔬 Input Trust' },
-          { key: 'governance', label: '⚖️ Provenance & MLOps' },
+          { key: 'input_trust', label: '🔬 Input Trust (Safety First)' },
+          { key: 'governance', label: '⚖️ Provenance & ML Governance' },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -165,30 +108,38 @@ export const App: React.FC = () => {
         ))}
       </nav>
 
-      {/* Main Content Area */}
+      {/* Main Container */}
       <main style={{ flex: 1, padding: '32px', maxWidth: '1280px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+        {errorMsg && (
+          <div style={{ backgroundColor: '#FFEBEE', border: '1px solid #EF9A9A', color: '#C62828', padding: '14px 18px', borderRadius: '6px', marginBottom: '24px', fontSize: '14px' }}>
+            ⚠️ <strong>Error Notice:</strong> {errorMsg}
+          </div>
+        )}
+
         {activeTab === 'decision' && (
           <div>
             <div style={{ marginBottom: '24px' }}>
               <h2 style={{ margin: '0 0 8px 0', color: '#1A3A2A' }}>Farm Decision Orchestrator</h2>
               <p style={{ margin: 0, color: '#5A6B5C', fontSize: '14px' }}>
-                Integrates real-time microclimate sensors, disease epidemiology, CIB&RC regulatory compliance, and APMC freight economics.
+                Coordinates validated microclimate epidemiological rules, APMC net freight realization, and safety-critical input differential diagnosis.
               </p>
             </div>
 
             {/* Input Form Panel */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '8px', border: '1px solid #E0E6ED', marginBottom: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#37474F' }}>CROP & VARIETY</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#37474F' }}>
+                  CROP SELECTION (Tomato Pilot)
+                </label>
                 <select value={crop} onChange={(e) => setCrop(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CFD8DC' }}>
-                  <option value="Tomato">Tomato (Hybrid Saaho 3251)</option>
-                  <option value="Chilli">Chilli (Teja Variety)</option>
-                  <option value="Cotton">Cotton (Bt RCH 659)</option>
+                  <option value="Tomato">Tomato (Supported Pilot Crop)</option>
+                  <option value="Chilli">Chilli (Unsupported - Validation Check)</option>
+                  <option value="Cotton">Cotton (Unsupported - Validation Check)</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#37474F' }}>DISTRICT / APMC REGION</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#37474F' }}>DISTRICT</label>
                 <select value={district} onChange={(e) => setDistrict(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CFD8DC' }}>
                   <option value="Rangareddy">Rangareddy (Telangana)</option>
                   <option value="Siddipet">Siddipet (Telangana)</option>
@@ -197,9 +148,12 @@ export const App: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#37474F' }}>HARVEST QUANTITY (QUINTALS)</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#37474F' }}>
+                  HARVEST QUANTITY (Quintals &gt; 0)
+                </label>
                 <input
                   type="number"
+                  min="1"
                   value={quantity}
                   onChange={(e) => setQuantity(Number(e.target.value))}
                   style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #CFD8DC', boxSizing: 'border-box' }}
@@ -231,7 +185,7 @@ export const App: React.FC = () => {
                     width: '100%'
                   }}
                 >
-                  {loading ? 'Orchestrating Agents...' : 'Run Farm Decision Plan'}
+                  {loading ? 'Executing Multi-Agent Workflow...' : 'Execute Farm Decision Plan'}
                 </button>
               </div>
             </div>
@@ -243,92 +197,129 @@ export const App: React.FC = () => {
                 <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '8px', border: '1px solid #E0E6ED' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <h3 style={{ margin: 0, color: '#1A3A2A' }}>🛡️ Crop Guard Assessment</h3>
-                    <span style={{ fontSize: '11px', backgroundColor: '#FFEBEE', color: '#C62828', padding: '4px 8px', borderRadius: '4px', fontWeight: '600' }}>
-                      HIGH RISK DETECTED
+                    <span style={{ fontSize: '11px', backgroundColor: '#FFF3E0', color: '#E65100', padding: '4px 8px', borderRadius: '4px', fontWeight: '600' }}>
+                      RULE-BASED EPIDEMIOLOGY
                     </span>
                   </div>
-                  {decisionResult.crop_guard.map((cg: any, i: number) => (
-                    <div key={i} style={{ borderBottom: '1px solid #ECEFF1', paddingBottom: '12px', marginBottom: '12px' }}>
-                      <div style={{ fontWeight: '600', color: '#263238' }}>{cg.threat}</div>
-                      <div style={{ fontSize: '13px', color: '#546E7A', marginTop: '4px' }}>
-                        Probability: <strong>{(cg.calibrated_probability * 100).toFixed(0)}%</strong> • Rule: <code>{cg.model_or_rule_identifier}</code>
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#37474F', marginTop: '6px' }}>
-                        👉 {cg.recommended_monitoring_action}
-                      </div>
+
+                  <div style={{ fontSize: '12px', color: '#78909C', marginBottom: '12px' }}>
+                    Weather Status: <strong>{decisionResult.weather_summary.status_label || 'LIVE MEASURED'}</strong>
+                  </div>
+
+                  {decisionResult.crop_guard.length === 0 ? (
+                    <div style={{ fontSize: '13px', color: '#C62828' }}>
+                      No assessments available. Crop '{crop}' is not supported by the Tomato pilot engine.
                     </div>
-                  ))}
+                  ) : (
+                    decisionResult.crop_guard.map((cg: any, i: number) => (
+                      <div key={i} style={{ borderBottom: '1px solid #ECEFF1', paddingBottom: '12px', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ fontWeight: '600', color: '#263238' }}>{cg.threat}</span>
+                          <span style={{
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            padding: '2px 6px',
+                            borderRadius: '3px',
+                            backgroundColor: cg.risk_category === 'high' ? '#FFEBEE' : '#F1F8E9',
+                            color: cg.risk_category === 'high' ? '#C62828' : '#2E7D32'
+                          }}>
+                            {cg.risk_category.toUpperCase()}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#546E7A', marginTop: '4px' }}>
+                          Protocol: <code>{cg.model_or_rule_identifier}</code> • Category: {cg.threat_type}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#37474F', marginTop: '6px' }}>
+                          👉 {cg.recommended_monitoring_action}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 {/* 2. Input Trust Card */}
                 <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '8px', border: '1px solid #E0E6ED' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0, color: '#1A3A2A' }}>🔬 Verified Regulatory Input</h3>
-                    <span style={{ fontSize: '11px', backgroundColor: '#E8F5E9', color: '#2E7D32', padding: '4px 8px', borderRadius: '4px', fontWeight: '600' }}>
-                      CIB&RC COMPLIANT
+                    <h3 style={{ margin: 0, color: '#1A3A2A' }}>🔬 Input Trust Diagnostic</h3>
+                    <span style={{ fontSize: '11px', backgroundColor: '#FFEBEE', color: '#C62828', padding: '4px 8px', borderRadius: '4px', fontWeight: '600' }}>
+                      DOSAGES DISABLED
                     </span>
                   </div>
-                  {decisionResult.input_trust.verified_regulatory_products.map((p: any, i: number) => (
-                    <div key={i} style={{ backgroundColor: '#F9FBE7', padding: '14px', borderRadius: '6px', border: '1px solid #DCE775' }}>
-                      <div style={{ fontWeight: '700', color: '#33691E' }}>{p.brand_name}</div>
-                      <div style={{ fontSize: '12px', color: '#558B2F', marginTop: '4px' }}>Active Ingredient: {p.active_ingredient}</div>
-                      <div style={{ fontSize: '12px', marginTop: '4px' }}>Approved Dosage: <strong>{p.approved_dosage_per_acre}</strong></div>
-                      <div style={{ fontSize: '12px', color: '#D84315', marginTop: '4px', fontWeight: '600' }}>
-                        ⚠️ Pre-Harvest Interval (PHI): {p.pre_harvest_interval_days} Days
-                      </div>
-                      <div style={{ fontSize: '10px', color: '#78909C', marginTop: '4px' }}>Reg No: {p.registration_number}</div>
-                    </div>
-                  ))}
-                </div>
 
-                {/* 3. Market Sense Card */}
-                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '8px', border: '1px solid #E0E6ED' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0, color: '#1A3A2A' }}>📈 Net Realization Optimization</h3>
-                    <span style={{ fontSize: '11px', backgroundColor: '#E3F2FD', color: '#1565C0', padding: '4px 8px', borderRadius: '4px', fontWeight: '600' }}>
-                      RANK #1 MANDI
-                    </span>
-                  </div>
-                  <div style={{ backgroundColor: '#F1F8E9', padding: '16px', borderRadius: '6px', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#1A3A2A' }}>
-                      {decisionResult.market_sense.recommended_mandi.market_name}
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#33691E', marginTop: '4px' }}>
-                      Net Realization: <strong>₹{decisionResult.market_sense.recommended_mandi.net_realization_per_quintal.toFixed(2)}/qtl</strong>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#558B2F' }}>
-                      Total Net Payout: <strong>₹{decisionResult.market_sense.recommended_mandi.expected_net_realization.toLocaleString()}</strong> (for {quantity} qtl)
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#78909C', marginTop: '4px' }}>
-                      Distance: {decisionResult.market_sense.recommended_mandi.distance_km} km
-                    </div>
-                  </div>
-
-                  <div style={{ fontSize: '13px', color: '#37474F' }}>
-                    <strong>Market Comparison:</strong>
-                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px', fontSize: '12px', color: '#546E7A' }}>
-                      {decisionResult.market_sense.all_mandis_comparison.map((m: any, idx: number) => (
+                  <div style={{ fontSize: '13px', marginBottom: '12px', color: '#37474F' }}>
+                    <strong>Differential Hypotheses:</strong>
+                    <ul style={{ margin: '6px 0 0 0', paddingLeft: '18px', fontSize: '12px', color: '#546E7A' }}>
+                      {decisionResult.input_trust.differential_diagnosis?.map((d: any, idx: number) => (
                         <li key={idx} style={{ marginBottom: '4px' }}>
-                          {m.market_name} ({m.distance_km} km): ₹{m.net_realization_per_quintal.toFixed(2)}/qtl net
+                          <strong>{d.condition_name}</strong> ({d.probability_rank}): {d.differentiating_feature}
                         </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div style={{ backgroundColor: '#FBE9E7', padding: '12px', borderRadius: '6px', border: '1px solid #FFCCBC', fontSize: '12px', color: '#BF360C', marginBottom: '12px' }}>
+                    ⚠️ <strong>Safety Directive:</strong> All synthetic chemical prescriptions and unverified dosages are disabled. Never apply chemicals without certified extension officer inspection.
+                  </div>
+
+                  <div style={{ fontSize: '12px', color: '#2E7D32' }}>
+                    <strong>Recommended Cultural Controls:</strong>
+                    <ul style={{ margin: '4px 0 0 0', paddingLeft: '18px', fontSize: '12px' }}>
+                      {decisionResult.input_trust.non_chemical_cultural_controls?.map((c: string, idx: number) => (
+                        <li key={idx} style={{ marginBottom: '4px' }}>{c}</li>
                       ))}
                     </ul>
                   </div>
                 </div>
 
-                {/* 4. Google Gemini Synthesis Card */}
+                {/* 3. Market Sense Card */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '8px', border: '1px solid #E0E6ED' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ margin: 0, color: '#1A3A2A' }}>📈 Net Realization Optimizer</h3>
+                    <span style={{ fontSize: '11px', backgroundColor: '#FFF3E0', color: '#E65100', padding: '4px 8px', borderRadius: '4px', fontWeight: '600' }}>
+                      {decisionResult.market_sense?.recommended_mandi?.data_source || 'DEMO_SIMULATED'}
+                    </span>
+                  </div>
+
+                  {decisionResult.market_sense?.recommended_mandi && (
+                    <div>
+                      <div style={{ backgroundColor: '#F1F8E9', padding: '14px', borderRadius: '6px', marginBottom: '14px' }}>
+                        <div style={{ fontSize: '16px', fontWeight: '700', color: '#1A3A2A' }}>
+                          {decisionResult.market_sense.recommended_mandi.market_name} (Rank #1)
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#33691E', marginTop: '4px' }}>
+                          Net Realization: <strong>₹{decisionResult.market_sense.recommended_mandi.net_realization_per_quintal.toFixed(2)}/qtl</strong>
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#558B2F' }}>
+                          Total Net Payout: <strong>₹{decisionResult.market_sense.recommended_mandi.expected_net_realization.toLocaleString()}</strong> (for {quantity} qtl)
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: '#546E7A', marginBottom: '10px' }}>
+                        <strong>Transparent Cost Disclosures:</strong>
+                        <div style={{ marginTop: '4px' }}>
+                          • Freight: ₹{decisionResult.market_sense.recommended_mandi.transport_cost} ({decisionResult.market_sense.recommended_mandi.cost_assumptions?.trucks_allocated} truck(s))<br/>
+                          • Mandi Fee: ₹{decisionResult.market_sense.recommended_mandi.mandi_fees} (1%)<br/>
+                          • Handling Hamali: ₹{decisionResult.market_sense.recommended_mandi.handling_cost} (₹35/qtl)<br/>
+                          • Quality Transit Deduction: ₹{decisionResult.market_sense.recommended_mandi.transit_quality_loss}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Supervisor Advisory */}
                 <div style={{ backgroundColor: '#1A3A2A', color: '#FFFFFF', padding: '24px', borderRadius: '8px', gridColumn: 'span 2' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h3 style={{ margin: 0, color: '#D4AF37' }}>🤖 Google AI / Gemini Synthesis</h3>
+                    <h3 style={{ margin: 0, color: '#D4AF37' }}>🤖 Farmer Advisory Synthesis</h3>
                     <span style={{ fontSize: '11px', backgroundColor: 'rgba(255,255,255,0.15)', padding: '4px 8px', borderRadius: '4px' }}>
-                      Farmer Advisory Brief
+                      Google AI / Gemini Synthesis
                     </span>
                   </div>
                   <p style={{ lineHeight: '1.6', fontSize: '14px', margin: '0 0 16px 0', opacity: 0.95 }}>
-                    {decisionResult.synthesized_explanation.explanation_text}
+                    {decisionResult.synthesized_explanation?.explanation_text}
                   </p>
                   <div style={{ backgroundColor: 'rgba(0,0,0,0.25)', padding: '12px', borderRadius: '6px', fontSize: '12px' }}>
-                    🔒 <strong>Statutory Safety Protocol:</strong> {decisionResult.synthesized_explanation.safety_reminder}
+                    🔒 <strong>Compliance Notice:</strong> {decisionResult.synthesized_explanation?.safety_reminder}
                   </div>
                 </div>
               </div>
@@ -338,25 +329,27 @@ export const App: React.FC = () => {
 
         {activeTab === 'governance' && (
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '8px', border: '1px solid #E0E6ED' }}>
-            <h2 style={{ color: '#1A3A2A', margin: '0 0 16px 0' }}>Data Governance, Provenance & MLOps</h2>
+            <h2 style={{ color: '#1A3A2A', margin: '0 0 16px 0' }}>Data Governance & Honest ML Status</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
               <div style={{ border: '1px solid #CFD8DC', padding: '16px', borderRadius: '6px' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#263238' }}>AGMARKNET / data.gov.in</h4>
-                <p style={{ fontSize: '12px', color: '#546E7A' }}>Provenance: <code>PROV-AGMARKNET-001</code></p>
-                <p style={{ fontSize: '12px', color: '#546E7A' }}>Coverage: National APMC Mandi Daily Arrivals</p>
-                <span style={{ fontSize: '11px', backgroundColor: '#E8F5E9', color: '#2E7D32', padding: '2px 6px', borderRadius: '4px' }}>VALIDATED</span>
+                <h4 style={{ margin: '0 0 8px 0', color: '#263238' }}>APMC Price Model</h4>
+                <p style={{ fontSize: '12px', color: '#546E7A' }}>Algorithm: Random Forest Regressor</p>
+                <p style={{ fontSize: '12px', color: '#546E7A' }}>Operational Status: <strong>SIMULATION_ONLY</strong></p>
+                <span style={{ fontSize: '11px', backgroundColor: '#FFF3E0', color: '#E65100', padding: '2px 6px', borderRadius: '4px' }}>
+                  NOT REAL-WORLD CERTIFIED
+                </span>
               </div>
               <div style={{ border: '1px solid #CFD8DC', padding: '16px', borderRadius: '6px' }}>
                 <h4 style={{ margin: '0 0 8px 0', color: '#263238' }}>Open-Meteo High Resolution</h4>
                 <p style={{ fontSize: '12px', color: '#546E7A' }}>Provenance: <code>PROV-WEATHER-003</code></p>
-                <p style={{ fontSize: '12px', color: '#546E7A' }}>Telemetry: 24h Observed + 7d Predictive Horizon</p>
-                <span style={{ fontSize: '11px', backgroundColor: '#E8F5E9', color: '#2E7D32', padding: '2px 6px', borderRadius: '4px' }}>LIVE ACTIVE</span>
+                <p style={{ fontSize: '12px', color: '#546E7A' }}>Status: Live API connected when online</p>
+                <span style={{ fontSize: '11px', backgroundColor: '#E8F5E9', color: '#2E7D32', padding: '2px 6px', borderRadius: '4px' }}>VERIFIED TELEMETRY</span>
               </div>
               <div style={{ border: '1px solid #CFD8DC', padding: '16px', borderRadius: '6px' }}>
-                <h4 style={{ margin: '0 0 8px 0', color: '#263238' }}>CIB&RC Pesticide Standards</h4>
-                <p style={{ fontSize: '12px', color: '#546E7A' }}>Provenance: <code>PROV-CIBRC-004</code></p>
-                <p style={{ fontSize: '12px', color: '#546E7A' }}>Statutory Standard: Insecticides Act, 1968</p>
-                <span style={{ fontSize: '11px', backgroundColor: '#E8F5E9', color: '#2E7D32', padding: '2px 6px', borderRadius: '4px' }}>VERIFIED REGULATORY</span>
+                <h4 style={{ margin: '0 0 8px 0', color: '#263238' }}>Crop Disease DL Vision</h4>
+                <p style={{ fontSize: '12px', color: '#546E7A' }}>Architecture: EfficientNet / MobileNet</p>
+                <p style={{ fontSize: '12px', color: '#546E7A' }}>Operational Status: <strong>NOT_TRAINED</strong></p>
+                <span style={{ fontSize: '11px', backgroundColor: '#ECEFF1', color: '#607D8B', padding: '2px 6px', borderRadius: '4px' }}>NO FAKE WEIGHTS</span>
               </div>
             </div>
           </div>
@@ -365,7 +358,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E0E6ED', padding: '16px 32px', textAlign: 'center', fontSize: '12px', color: '#78909C' }}>
-        KRISHIVA AI • Protect Crops. Trust Inputs. Sell Smarter. • Developed for Indian Agriculture & FPO Scale
+        KRISHIVA AI • Buildathon Edition • Evidence-led agricultural intelligence with strict regulatory and safety boundaries.
       </footer>
     </div>
   );

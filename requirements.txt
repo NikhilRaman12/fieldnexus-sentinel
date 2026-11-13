@@ -1,11 +1,26 @@
+# KRISHIVA AI — Production Backend Dependencies Manifest
+fastapi>=0.110.0,<0.120.0
+uvicorn[standard]>=0.28.0,<0.35.0
+pydantic>=2.7.0,<3.0.0
+pydantic-settings>=2.2.0,<3.0.0
+sqlalchemy>=2.0.28,<3.0.0
+requests>=2.31.0,<3.0.0
+httpx>=0.27.0,<0.30.0
 
-pandas
-scikit-learn
-numpy
-matplotlib
-seaborn
-xgboost
-torch
-transformers   
-python-dotenv
-streamlit
+# Multi-Agent Orchestration & Google AI
+langgraph>=0.2.0,<0.4.0
+langchain>=0.2.0,<0.4.0
+google-genai>=0.1.0,<1.0.0
+google-cloud-aiplatform>=1.44.0,<2.0.0
+
+# Machine Learning & Scientific Computing
+numpy>=1.26.0,<2.2.0
+pandas>=2.2.0,<3.0.0
+scikit-learn>=1.4.0,<1.7.0
+xgboost>=2.0.0,<3.0.0
+torch>=2.2.0,<2.6.0
+transformers>=4.40.0,<5.0.0
+
+# Testing & Quality Engineering
+pytest>=8.0.0,<9.0.0
+pytest-asyncio>=0.23.0,<0.26.0

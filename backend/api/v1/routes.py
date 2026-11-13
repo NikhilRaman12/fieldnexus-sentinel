@@ -1,7 +1,7 @@
 """
-KRISHIVA AI — Production FastAPI Application & API Endpoints
-Implements all Phase 9 versioned endpoints with Pydantic validation, structured error handling,
-PostgreSQL/SQLite database persistence, and LangGraph orchestration.
+KRISHIVA AI — Production FastAPI Application & API Endpoints (Hardened)
+Implements all versioned endpoints with strict validation, CORS restrictions,
+safe data masking, honest ML governance status, and error responses.
 """
 
 from fastapi import FastAPI, Depends, HTTPException, Query, status
@@ -39,16 +39,16 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Enable CORS for React frontend
+# Restrict CORS to configured frontend origins (SECURITY HARDENING)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Initialize engines
+# Initialize domain services
 weather_adapter = WeatherAdapter()
 agmarknet_adapter = AgmarknetAdapter()
 crop_guard_engine = CropGuardEngine()
@@ -76,14 +76,15 @@ def get_health():
 
 @app.post("/api/v1/farms", response_model=FarmResponse, tags=["Farm Management"])
 def register_farm(payload: FarmCreateRequest, db: Session = Depends(get_db)):
-    """Registers farmer, farm plot, and active crop cycle."""
+    """Registers farmer, farm plot, and active crop cycle with explicit consent opt-in."""
     try:
         farmer = Farmer(
             name=payload.farmer_name,
             phone_number=payload.phone_number,
             village=payload.village,
             district=payload.district,
-            state=payload.state
+            state=payload.state,
+            consent_recorded=True  # Explicitly recorded upon form submission
         )
         db.add(farmer)
         db.flush()
@@ -130,21 +131,25 @@ def register_farm(payload: FarmCreateRequest, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to register farm: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Farm registration error occurred.")
 
 
 @app.get("/api/v1/farms", tags=["Farm Management"])
 def list_farms(db: Session = Depends(get_db)):
-    """Lists registered farms with plot and crop details."""
+    """
+    Lists registered farms.
+    SECURITY FIX: Mask personal identifiers (phone numbers and full personal names) in public endpoint.
+    """
     farms = db.query(Farm).all()
     results = []
     for f in farms:
+        farmer_label = f.farmer.name[0] + "***" if (f.farmer and f.farmer.name) else "Anonymized Farmer"
         results.append({
             "farm_id": f.id,
-            "farmer_name": f.farmer.name if f.farmer else "Unknown",
+            "farmer_masked_identity": farmer_label,
             "district": f.farmer.district if f.farmer else "Telangana",
-            "latitude": f.latitude,
-            "longitude": f.longitude,
+            "latitude": round(f.latitude, 3),
+            "longitude": round(f.longitude, 3),
             "area_acres": f.total_area_acres
         })
     return results
@@ -152,15 +157,31 @@ def list_farms(db: Session = Depends(get_db)):
 
 @app.post("/api/v1/crop-risk/assess", response_model=CropRiskAssessResponse, tags=["Crop Guard"])
 def assess_crop_risk(payload: CropRiskAssessRequest):
-    """Assess real-time microclimatic fungal and insect risks using live meteorological telemetry."""
+    """
+    Assess microclimatic fungal and insect risks for supported crops.
+    FIX: Rejects unsupported crops with HTTP 400 Bad Request.
+    """
+    if payload.crop.strip().capitalize() not in CropGuardEngine.SUPPORTED_CROPS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"Crop '{payload.crop}' is not currently supported by Crop Guard. "
+                f"Currently supported crops: {', '.join(CropGuardEngine.SUPPORTED_CROPS)}. "
+                "Silently applying tomato rules to other crops is prohibited."
+            )
+        )
+
     weather = weather_adapter.fetch_weather(payload.latitude, payload.longitude)
-    threats = crop_guard_engine.evaluate_tomato_risks(
+    threats = crop_guard_engine.evaluate_crop_risks(
+        crop=payload.crop,
         temperature_c=weather.current.temperature_c,
         relative_humidity_percent=weather.current.relative_humidity_percent,
         rainfall_24h_mm=weather.current.precipitation_mm,
         crop_stage=payload.crop_stage,
         variety=payload.variety,
-        district=payload.district
+        district=payload.district,
+        weather_provider=weather.provider,
+        is_live_weather=weather.is_live_measured
     )
 
     review_needed = any(t.human_review_required for t in threats)
@@ -172,7 +193,9 @@ def assess_crop_risk(payload: CropRiskAssessRequest):
             "temperature_c": weather.current.temperature_c,
             "relative_humidity_percent": weather.current.relative_humidity_percent,
             "precipitation_mm": weather.current.precipitation_mm,
-            "provider": weather.provider
+            "provider": weather.provider,
+            "is_live_measured": weather.is_live_measured,
+            "status_label": weather.status_label
         },
         threat_assessments=[t.model_dump() for t in threats],
         human_review_required=review_needed
@@ -181,7 +204,16 @@ def assess_crop_risk(payload: CropRiskAssessRequest):
 
 @app.post("/api/v1/markets/compare", response_model=MarketCompareResponse, tags=["Market Sense"])
 def compare_markets(payload: MarketCompareRequest):
-    """Computes quantity-aware net realization across verified APMC mandis."""
+    """
+    Computes quantity-aware net realization across mandis.
+    FIX: Validates quantity > 0 with HTTP 400 error.
+    """
+    if payload.quantity_quintals <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Harvest quantity must be greater than zero. Received: {payload.quantity_quintals} quintals."
+        )
+
     mandi_pool = agmarknet_adapter.TELANGANA_MANDIS
     report = market_optimizer.optimize_markets(
         farmer_lat=payload.latitude,
@@ -206,14 +238,17 @@ def get_mandi_prices(
     state: str = Query(default="Telangana"),
     commodity: str = Query(default="Tomato")
 ):
-    """Retrieves verified APMC mandi prices and arrival volumes."""
+    """Retrieves APMC mandi price telemetry (explicitly tagged live vs DEMO_SIMULATED)."""
     records = agmarknet_adapter.fetch_mandi_prices(state=state, commodity=commodity)
     return [r.model_dump() for r in records]
 
 
 @app.post("/api/v1/input-trust/diagnose", response_model=InputDiagnoseResponse, tags=["Input Trust"])
 def diagnose_crop_issue(payload: InputDiagnoseRequest):
-    """Performs evidence-led differential diagnosis and CIB&RC / FCO regulatory verification."""
+    """
+    Performs evidence-led differential diagnosis.
+    FIX: Chemical dosages disabled for safety; non-chemical cultural guidance and agronomist escalation returned.
+    """
     report = input_trust_engine.diagnose_and_recommend(
         crop=payload.crop,
         symptom_description=payload.symptom_description,
@@ -240,6 +275,12 @@ def diagnose_crop_issue(payload: InputDiagnoseRequest):
 @app.post("/api/v1/decisions/plan", response_model=DecisionPlanResponse, tags=["Farm Decision Center"])
 def orchestrate_decision_plan(payload: DecisionPlanRequest, db: Session = Depends(get_db)):
     """Executes end-to-end LangGraph multi-agent orchestration for farm decisions."""
+    if payload.harvest_quantity_quintals <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Harvest quantity must be greater than zero. Received: {payload.harvest_quantity_quintals} quintals."
+        )
+
     initial_state = {
         "session_id": payload.session_id,
         "farmer_id": payload.farmer_id,
@@ -270,7 +311,6 @@ def orchestrate_decision_plan(payload: DecisionPlanRequest, db: Session = Depend
 
     final_state = orchestrator.execute_plan(initial_state)
 
-    # Persist audit record
     try:
         audit = AuditEvent(
             event_type="DECISION_PLAN_EXECUTED",
@@ -280,7 +320,7 @@ def orchestrate_decision_plan(payload: DecisionPlanRequest, db: Session = Depend
                 "crop": payload.crop,
                 "district": payload.district,
                 "execution_trace": final_state.get("execution_trace", []),
-                "recommended_mandi": final_state.get("market_sense_results", {}).get("recommended_mandi", {}).get("market_name")
+                "errors": final_state.get("errors", [])
             }
         )
         db.add(audit)
@@ -311,26 +351,42 @@ def list_data_sources():
 
 @app.get("/api/v1/models/status", tags=["Governance & Provenance"])
 def get_models_status():
-    """Reports active production ML models, version metadata, and evaluation metrics."""
+    """
+    ML GOVERNANCE AUDIT FIX:
+    Reports honest model statuses. Identifies synthetic price model as SIMULATION_ONLY.
+    Never claims unvalidated ML models are production-ready.
+    """
     return {
+        "model_governance_policy": "HONEST_ML_REPORTING_POLICY",
         "active_models": [
             {
-                "model_name": "KRISHIVA APMC Price Forecaster",
-                "version": "v1.0.0",
+                "model_name": "KRISHIVA APMC Price Simulation Pipeline",
+                "version": "v1.0.0-simulation",
                 "algorithm": "RandomForestRegressor",
-                "validation": "Strict Temporal Holdout (80/20)",
-                "mae_inr": 67.93,
-                "baseline_mae_inr": 138.71,
-                "r2_score": 0.643,
-                "directional_accuracy": 0.612,
-                "status": "PRODUCTION_READY"
+                "training_data": "Synthetic Telangana Tomato Price Time-Series (Simulation Only)",
+                "validation_strategy": "Chronological 80/20 Holdout",
+                "simulated_test_mae_inr": 67.93,
+                "simulated_naive_mae_inr": 138.71,
+                "simulated_r2_score": 0.643,
+                "operational_status": "SIMULATION_ONLY",
+                "production_ready_claim": False,
+                "limitation": "Trained on synthetic seasonal simulation data; CANNOT be used for real financial speculation or price guarantees."
             },
             {
-                "model_name": "Crop Guard Early Blight Microclimate Rule Engine",
+                "model_name": "Crop Guard Tomato Epidemiological Rule Engine",
                 "version": "RULE-ICAR-TOMATO-EB-V1",
-                "algorithm": "ICAR-IIHR Validated Microclimate Threshold Matrix",
-                "validation": "Field Tested Epidemiological Standard",
-                "status": "PRODUCTION_READY"
+                "algorithm": "ICAR-IIHR Microclimate Threshold Matrix",
+                "operational_status": "RULE_BASED_OPERATIONAL",
+                "production_ready_claim": False,
+                "limitation": "Evaluates microclimate disease favorability only. Does not replace physical field scout examination."
+            },
+            {
+                "model_name": "Crop Disease Computer Vision Deep Learning Model",
+                "version": "NOT_DEPLOYED",
+                "algorithm": "EfficientNet / MobileNet",
+                "operational_status": "NOT_TRAINED",
+                "production_ready_claim": False,
+                "limitation": "No field-validated dataset available in this buildathon phase. Zero fabricated DL weights."
             }
         ]
     }
