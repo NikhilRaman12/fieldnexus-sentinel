@@ -1,5 +1,63 @@
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+token.json
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Data & Output Artifacts (preserve reference and schema structures)
 data/processed/
+data/interim/
 eda/reports/
 logs/
-__pycache__/
 *.log
+models/checkpoints/
+models/saved/
+outputs/reports/*.json
+outputs/reports/*.csv
+!outputs/reports/.gitkeep
+
+# Node & Frontend
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database & OS
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
