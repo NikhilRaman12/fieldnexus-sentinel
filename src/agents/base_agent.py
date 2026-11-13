@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import pandas as pd
+from typing import Any
 
 class BaseAgent(ABC):
     """
@@ -14,25 +14,16 @@ class BaseAgent(ABC):
         self.name = name
 
     @abstractmethod
-    def execute(self, df: pd.DataFrame) -> pd.DataFrame:
+    def execute(self, *args: Any, **kwargs: Any) -> Any:
         """
         Each agent must implement its own logic here.
         """
         pass
 
-    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+    def run(self, *args: Any, **kwargs: Any) -> Any:
         """
         Standard wrapper for agent execution.
         Ensures uniform behavior across all agents.
         """
-        if df is None:
-            raise ValueError(f"{self.name}: Input DataFrame cannot be None")
+        return self.execute(*args, **kwargs)
 
-        result = self.execute(df)
-
-        if not isinstance(result, pd.DataFrame):
-            raise TypeError(
-                f"{self.name}: execute() must return a pandas DataFrame"
-            )
-
-        return result
